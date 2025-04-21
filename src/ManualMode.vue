@@ -92,47 +92,80 @@ function constrain(min: number, value: number, max: number): number{
       </div>
     </div>
     <div class="axis-step">
-      <div @click="addToCommandedPosition(-1)" class="button-div w-10v">
-        <div class="row">
-          <img src="/chevron-left-3.svg" alt="Chevron Left 3">
-          <p>
-            -1 in
-          </p>
-        </div>
-
+      <div @click="addToCommandedPosition(-1)" class="button-div w-8v h-10v flex">
+        <img src="/chevron-left-3.svg" alt="Chevron Left 3" class="my-auto h-2 p-1">
+        <p class="my-auto p-1 nowrap">
+          -1 in
+        </p>
       </div>
-      <div @click="addToCommandedPosition(-0.1)" class="button-div">
-        <img src="/chevron-left-2.svg" alt="Chevron Left 2">
-        -0.1 in
+      <div @click="addToCommandedPosition(-0.1)" class="button-div w-8v h-10v flex">
+        <img src="/chevron-left-2.svg" alt="Chevron Left 2" class="my-auto h-2 p-1">
+        <p class="my-auto p-1 nowrap">
+          -0.1 in
+        </p>
       </div>
-      <div @click="addToCommandedPosition(-0.01)" class="button-div">
-        <img src="/chevron-left-1.svg" alt="Chevron Left 1">
-        -0.01 in
+      <div @click="addToCommandedPosition(-0.01)" class="button-div w-8v h-10v flex">
+        <img src="/chevron-left-1.svg" alt="Chevron Left 1" class="my-auto h-2 p-1">
+        <p class="my-auto p-1 nowrap">
+          -0.01 in
+        </p>
       </div>
-      <div @click="addToCommandedPosition(0.01)" class="button-div">
-        0.01 in
-        <img src="/chevron-right-1.svg" alt="Chevron Right 1" class="button-div">
+      <div @click="addToCommandedPosition(0.01)" class="button-div w-8v h-10v flex">
+        <p class="my-auto p-1 nowrap">
+          0.01 in
+        </p>
+        <img src="/chevron-right-1.svg" alt="Chevron Right 1" class="my-auto h-2 p-1">
       </div>
-      <div @click="addToCommandedPosition(0.1)">
-        0.1 in
-        <img src="/chevron-right-2.svg" alt="Chevron Right 2" class="button-div">
+      <div @click="addToCommandedPosition(0.1)" class="button-div w-8v h-10v flex">
+        <p class="my-auto p-1 nowrap">
+          0.1 in
+        </p>
+        <img src="/chevron-right-2.svg" alt="Chevron Right 2" class="my-auto h-2 p-1">
       </div>
-      <div @click="addToCommandedPosition(1)">
-        1 in
-        <img src="/chevron-right-3.svg" alt="Chevron Right 3" class="button-div">
+      <div @click="addToCommandedPosition(1)" class="button-div w-8v h-10v flex">
+        <p class="my-auto p-1 nowrap">
+          1 in
+        </p>
+        <img src="/chevron-right-3.svg" alt="Chevron Right 3" class="my-auto h-2 p-1">
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.w-10v{
-  width: 10vw;
+.p-1{
+  margin: 2px;
 }
-.row {
+.h-2{
+  height: 2rem;
+}
+
+.nowrap{
+  text-wrap: nowrap;
+}
+
+.flex-max{
+  flex: max-content;
+}
+
+.debug{
+  border: red 2px solid;
+}
+
+.white{
+  stroke: #e8e8e8;
+  fill: #e8e8e8;
+}
+.w-8v{
+  width: 8vw;
+}
+.h-10v{
+  height: 10vh;
+}
+.flex {
   display: flex;
-  justify-content: center;
 }
+
 
 .button-div {
   border-radius: 8px;
@@ -201,6 +234,11 @@ function constrain(min: number, value: number, max: number): number{
 .icon{
   width: 1cap;
   height: 1cap;
+  margin: auto;
+}
+.big-icon{
+  width: auto;
+  height: 2cap;
   margin: auto;
 }
 </style>
