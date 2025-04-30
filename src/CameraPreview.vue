@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {Mode} from "./types.ts";
-import {House} from "lucide-vue-next";
+
 import { ref, onMounted, onUnmounted } from 'vue';
 import ModeToolbar from "./ModeToolbar.vue";
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { invoke } from "@tauri-apps/api/core";
+
 import { Mode } from './types.ts'
 import { ref } from 'vue';
 import Home from "./Home.vue";
@@ -7,13 +7,7 @@ import ExecuteMode from "./ExecuteMode.vue";
 import ManualMode from "./ManualMode.vue";
 import CameraPreview from "./CameraPreview.vue";
 import {
-  warn,
-  debug,
-  trace,
   info,
-  error,
-  attachConsole,
-  attachLogger,
 } from '@tauri-apps/plugin-log';
 
 const currentMode = ref<Mode>(Mode.Home);
