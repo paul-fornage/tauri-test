@@ -1,34 +1,55 @@
 <script setup lang="ts">
+import { Mode } from './types.ts'
+import { invoke } from "@tauri-apps/api/core";
+import { ref, onMounted } from 'vue';
 
-const emit = defineEmits(['modeChange'])
+const ip_addr = ref<string>("Ip Address");
 
-async function executeModePressed() {
-  console.log("execute mode");
-  emit('modeChange', 'execute')
+const emit = defineEmits<{
+  (e: 'modeChange', mode: Mode): void
+}>()
+
+async function modeChange(mode: Mode) {
+  console.log("modeChange: " + mode)
+  emit('modeChange', mode)
 }
 
-async function manualModePressed() {
-  console.log("manual mode");
-  emit('modeChange', 'manual')
-}
+onMounted(async () => {
+  ip_addr.value = await invoke("get_ip_addr");
+  console.log("ip_addr: " + ip_addr.value);
+})
 
 </script>
 
 <template>
   <main class="container">
-    <div class="row">
-      <img src="/mitusa-logo.png" class="logo mitusa" alt="Mitusa logo" />
+    <div class="flex">
+      <img src="/mitusa-logo.png" class="logo mitusa mx-auto p-3" alt="Mitusa logo" />
     </div>
-    <div>
-      <h2>Select operating mode</h2>
+    <div class="">
+      <h2 class="mx-auto mt-3 text-center text-4xl ">
+        Select operating mode
+      </h2>
+      <p class="mx-auto mt-1 pb-2 mb-5 text-center text-sm border-b-2">
+        Local IP address: {{ip_addr}}
+      </p>
     </div>
 
-    <div class="mode-button-div">
-      <button @click="executeModePressed" class="button big-text y-padding-big w-25p">
+    <div class="flex">
+      <button
+          @click="modeChange(Mode.Execute)"
+          class="mode-button">
         Execute Mode
       </button>
-      <button @click="manualModePressed" class="button big-text y-padding-big w-25p">
+      <button
+          @click="modeChange(Mode.Manual)"
+          class="mode-button">
         Manual Mode
+      </button>
+      <button
+          @click="modeChange(Mode.CameraPreview)"
+          class="mode-button">
+        Camera Preview
       </button>
     </div>
   </main>
@@ -43,41 +64,18 @@ async function manualModePressed() {
   filter: drop-shadow(0 0 2em #249b73);
 }
 
-.shrink{
-  width: fit-content;
-  margin: auto;
-}
-
-.card{
-  border: 5px ridge #e8e8e8;
-  border-radius: 10px;
-}
-.mode-button-div{
-  margin-top: auto;
-  padding: 5px;
-}
-.y-padding-big{
-  padding: 50px 10px;
-}
-
-.w-25p{
-  width: 25vw;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: 0.75s;
-}
-
-.big-text{
-  font-size: larger;
-}
-
-.row {
-  display: flex;
-  justify-content: center;
+.mode-button {
+  @apply mx-auto;
+  @apply p-3;
+  @apply border-zinc-900;
+  @apply border-2;
+  @apply w-60;
+  @apply text-center;
+  @apply rounded-lg;
+  @apply bg-zinc-200;
+  @apply cursor-pointer;
+  @apply hover:bg-zinc-300;
+  @apply click:bg-zinc-400;
 }
 
 </style>

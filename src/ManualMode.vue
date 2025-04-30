@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import { House } from 'lucide-vue-next';
 import { ref } from 'vue';
-const emit = defineEmits(['modeChange'])
+import { Mode } from './types.ts'
+
+const emit = defineEmits<{
+  (e: 'modeChange', mode: Mode): void
+}>()
 
 async function homeClicked() {
   console.log("change to home")
-  emit("modeChange", "home")
+  emit("modeChange", Mode.Home)
 }
 
 const maxCommandedPosition = 48;
