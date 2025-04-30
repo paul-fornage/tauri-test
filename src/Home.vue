@@ -2,6 +2,7 @@
 import { Mode } from './types.ts'
 import { invoke } from "@tauri-apps/api/core";
 import { ref, onMounted } from 'vue';
+import Button from "./Button.vue";
 
 const ip_addr = ref<string>("Ip Address");
 
@@ -35,22 +36,10 @@ onMounted(async () => {
       </p>
     </div>
 
-    <div class="flex">
-      <button
-          @click="modeChange(Mode.Execute)"
-          class="mx-auto p-3 w-1/6 border-zinc-900 border-2 text-center rounded-lg bg-zinc-200 cursor-pointer hover:bg-zinc-300 click:bg-zinc-400">
-        Execute Mode
-      </button>
-      <button
-          @click="modeChange(Mode.Manual)"
-          class="mx-auto p-3 w-1/6 border-zinc-900 border-2 text-center rounded-lg bg-zinc-200 cursor-pointer hover:bg-zinc-300 click:bg-zinc-400">
-        Manual Mode
-      </button>
-      <button
-          @click="modeChange(Mode.CameraPreview)"
-          class="mx-auto p-3 w-1/6 border-zinc-900 border-2 text-center rounded-lg bg-zinc-200 cursor-pointer hover:bg-zinc-300 click:bg-zinc-400">
-        Camera Preview
-      </button>
+    <div class="flex gap-4 mx-4">
+      <Button @click="modeChange(Mode.Execute)" text="Execute Mode" class="flex-1/3 h-32 text-2xl"/>
+      <Button @click="modeChange(Mode.Manual)" text="Manual Mode" class="flex-1/3 h-32 text-2xl"/>
+      <Button @click="modeChange(Mode.CameraPreview)" text="Camera Preview" class="flex-1/3 h-32 text-2xl"/>
     </div>
   </main>
 </template>

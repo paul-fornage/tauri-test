@@ -44,7 +44,7 @@ function constrain(min: number, value: number, max: number): number{
       @homeClicked="homeClicked"
   />
 
-  <div class="flex border-b-2">
+  <div class="flex border-b-2 p-4">
     <div class="flex flex-col flex-1/4 mx-2">
       <Button text="Run Axis Homing Sequence" />
       <Button text="Return to home" />
@@ -66,8 +66,8 @@ function constrain(min: number, value: number, max: number): number{
     <h1 class="mx-auto text-center">
       {{commanded_axis_pos.toFixed(2)}}
     </h1>
-    <div class="axis-slider-div">
-      <div>
+    <div class="flex h-20">
+      <div class="m-auto text-lg">
         {{minCommandedPosition}}
       </div>
       <input
@@ -80,7 +80,7 @@ function constrain(min: number, value: number, max: number): number{
           :max="maxCommandedPosition"
           :value="minCommandedPosition"
           step="0.01" />
-      <div>
+      <div class="m-auto text-lg">
         {{maxCommandedPosition}}
       </div>
     </div>
@@ -137,16 +137,42 @@ function constrain(min: number, value: number, max: number): number{
 }
 
 
-
-
-.axis-slider-div{
-  display: flex;
-}
-
-.axis-slider{
-  width: 80vw;
+.axis-slider {
+  -webkit-appearance: none;  /* Override default CSS styles */
+  appearance: none;
+  width: 90vw;
   margin: auto auto;
   justify-self: center;
+  height: 25px; /* Specified height */
+  background: #d3d3d3; /* Grey background */
+  border-radius: 1rem;
+  outline: none; /* Remove outline */
+  opacity: 0.7; /* Set transparency (for mouse-over effects on hover) */
+  -webkit-transition: .2s; /* 0.2 seconds transition on hover */
+  transition: opacity .2s;
+}
+
+/* Mouse-over effects */
+.axis-slider:hover {
+  opacity: 1; /* Fully shown on mouse-over */
+}
+
+.axis-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  background: #04AA6D;
+  cursor: pointer;
+}
+
+.axis-slider::-moz-range-thumb {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  background: #04AA6D;
+  cursor: pointer;
 }
 
 .axis-step{
