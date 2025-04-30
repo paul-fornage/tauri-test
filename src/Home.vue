@@ -22,8 +22,8 @@ onMounted(async () => {
 </script>
 
 <template>
-  <main class="container">
-    <div class="flex">
+  <main>
+    <div class="flex pt-10">
       <img src="/mitusa-logo.png" class="logo mitusa mx-auto p-3" alt="Mitusa logo" />
     </div>
     <div class="">
@@ -38,17 +38,17 @@ onMounted(async () => {
     <div class="flex">
       <button
           @click="modeChange(Mode.Execute)"
-          class="mode-button">
+          class="mx-auto p-3 w-1/6 border-zinc-900 border-2 text-center rounded-lg bg-zinc-200 cursor-pointer hover:bg-zinc-300 click:bg-zinc-400">
         Execute Mode
       </button>
       <button
           @click="modeChange(Mode.Manual)"
-          class="mode-button">
+          class="mx-auto p-3 w-1/6 border-zinc-900 border-2 text-center rounded-lg bg-zinc-200 cursor-pointer hover:bg-zinc-300 click:bg-zinc-400">
         Manual Mode
       </button>
       <button
           @click="modeChange(Mode.CameraPreview)"
-          class="mode-button">
+          class="mx-auto p-3 w-1/6 border-zinc-900 border-2 text-center rounded-lg bg-zinc-200 cursor-pointer hover:bg-zinc-300 click:bg-zinc-400">
         Camera Preview
       </button>
     </div>
@@ -64,18 +64,6 @@ onMounted(async () => {
   filter: drop-shadow(0 0 2em #249b73);
 }
 
-.mode-button {
-  @apply mx-auto;
-  @apply p-3;
-  @apply border-zinc-900;
-  @apply border-2;
-  @apply w-60;
-  @apply text-center;
-  @apply rounded-lg;
-  @apply bg-zinc-200;
-  @apply cursor-pointer;
-  @apply hover:bg-zinc-300;
-  @apply click:bg-zinc-400;
-}
+
 
 </style>

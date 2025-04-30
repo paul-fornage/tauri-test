@@ -25,7 +25,6 @@ function handleModeChange(mode: Mode) {
 </script>
 
 <template>
-
   <Home
       v-if="currentMode==Mode.Home"
       @mode-change="handleModeChange"></Home>
@@ -57,6 +56,16 @@ function handleModeChange(mode: Mode) {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+#app {
+  height: 100%;
 }
 
 

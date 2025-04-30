@@ -2,6 +2,8 @@
 import { House } from 'lucide-vue-next';
 import { ref } from 'vue';
 import { Mode } from './types.ts'
+import ModeToolbar from "./ModeToolbar.vue";
+import Button from "./Button.vue";
 
 const emit = defineEmits<{
   (e: 'modeChange', mode: Mode): void
@@ -37,44 +39,31 @@ function constrain(min: number, value: number, max: number): number{
 </script>
 
 <template>
-  <div class="toolbar">
-    <p class="my-auto padding-8px">
-      Manual Mode
-    </p>
-    <button @click="homeClicked" class="flex-right my-auto padding-8px">
-      <House class="icon"/>
-      Home
-    </button>
-  </div>
-  <div class="upper-buttons">
-    <button class="home-button">
-      Run Axis Homing Sequence
-    </button>
-    <div class="learn-button-group">
-      <button class="learn-start-button">
-        Set start to current position
-      </button>
-      <button class="learn-end-button">
-        Set end to current position
-      </button>
-      <button class="learn-park-button">
-        Set park to current position
-      </button>
+  <ModeToolbar
+      header-text="Manual Control"
+      @homeClicked="homeClicked"
+  />
+
+  <div class="flex border-b-2">
+    <div class="flex flex-col flex-1/4 mx-2">
+      <Button text="Run Axis Homing Sequence" />
+      <Button text="Return to home" />
+      <Button text="Set speed" />
     </div>
-    <div class="indicator-group">
-      <div class="indicator-card">
-        Clamp
-      </div>
-      <div class="indicator-card">
-        Fingers
-      </div>
-      <div class="indicator-card">
-        Roller
-      </div>
+
+    <div class="flex flex-col flex-1/4 mx-2">
+      <Button text="Set job start to current position" />
+      <Button text="Set job end to current position" />
+      <Button text="Set job park to current position" />
+    </div>
+    <div class="flex flex-col flex-1/4 mx-2">
+      <Button text="Toggle Clamps" />
+      <Button text="Fingers" />
+      <Button text="Roller" />
     </div>
   </div>
-  <div class="axis-control">
-    <h1>
+  <div class="m-2">
+    <h1 class="mx-auto text-center">
       {{commanded_axis_pos.toFixed(2)}}
     </h1>
     <div class="axis-slider-div">
@@ -95,105 +84,56 @@ function constrain(min: number, value: number, max: number): number{
         {{maxCommandedPosition}}
       </div>
     </div>
-    <div class="axis-step">
-      <div @click="addToCommandedPosition(-1)" class="button-div w-8v h-10v flex">
-        <img src="/chevron-left-3.svg" alt="Chevron Left 3" class="my-auto h-2 p-1">
-        <p class="my-auto p-1 nowrap">
+    <div class="flex mt-5 gap-4">
+      <div @click="addToCommandedPosition(-1)" class="h-20 flex flex-1/6 border-2 rounded-lg p-1 cursor-pointer bg-zinc-200 hover:bg-zinc-300 click:bg-zinc-400">
+        <img src="/chevron-left-3.svg" alt="Chevron Left 3" class="my-auto h-16 p-1 stroke-black">
+        <p class="my-auto p-1 nowrap ml-auto text-2xl">
           -1 in
         </p>
       </div>
-      <div @click="addToCommandedPosition(-0.1)" class="button-div w-8v h-10v flex">
-        <img src="/chevron-left-2.svg" alt="Chevron Left 2" class="my-auto h-2 p-1">
-        <p class="my-auto p-1 nowrap">
+      <div @click="addToCommandedPosition(-0.1)" class="h-20 flex flex-1/6 border-2 rounded-lg p-1 cursor-pointer bg-zinc-200 hover:bg-zinc-300 click:bg-zinc-400">
+        <img src="/chevron-left-2.svg" alt="Chevron Left 2" class="my-auto h-16 p-1">
+        <p class="my-auto p-1 nowrap ml-auto text-2xl">
           -0.1 in
         </p>
       </div>
-      <div @click="addToCommandedPosition(-0.01)" class="button-div w-8v h-10v flex">
-        <img src="/chevron-left-1.svg" alt="Chevron Left 1" class="my-auto h-2 p-1">
-        <p class="my-auto p-1 nowrap">
+      <div @click="addToCommandedPosition(-0.01)" class="h-20 flex flex-1/6 border-2 rounded-lg p-1 cursor-pointer bg-zinc-200 hover:bg-zinc-300 click:bg-zinc-400">
+        <img src="/chevron-left-1.svg" alt="Chevron Left 1" class="my-auto h-16 p-1">
+        <p class="my-auto p-1 nowrap ml-auto text-2xl">
           -0.01 in
         </p>
       </div>
-      <div @click="addToCommandedPosition(0.01)" class="button-div w-8v h-10v flex">
-        <p class="my-auto p-1 nowrap">
+      <div @click="addToCommandedPosition(0.01)" class="h-20 flex flex-1/6 border-2 rounded-lg p-1 cursor-pointer bg-zinc-200 hover:bg-zinc-300 click:bg-zinc-400">
+        <p class="my-auto p-1 nowrap mr-auto text-2xl">
           0.01 in
         </p>
-        <img src="/chevron-right-1.svg" alt="Chevron Right 1" class="my-auto h-2 p-1">
+        <img src="/chevron-right-1.svg" alt="Chevron Right 1" class="my-auto h-16 p-1">
       </div>
-      <div @click="addToCommandedPosition(0.1)" class="button-div w-8v h-10v flex">
-        <p class="my-auto p-1 nowrap">
+      <div @click="addToCommandedPosition(0.1)" class="h-20 flex flex-1/6 border-2 rounded-lg p-1 cursor-pointer bg-zinc-200 hover:bg-zinc-300 click:bg-zinc-400">
+        <p class="my-auto p-1 nowrap mr-auto text-2xl">
           0.1 in
         </p>
-        <img src="/chevron-right-2.svg" alt="Chevron Right 2" class="my-auto h-2 p-1">
+        <img src="/chevron-right-2.svg" alt="Chevron Right 2" class="my-auto h-16 p-1">
       </div>
-      <div @click="addToCommandedPosition(1)" class="button-div w-8v h-10v flex">
-        <p class="my-auto p-1 nowrap">
+      <div @click="addToCommandedPosition(1)" class="h-20 flex flex-1/6 border-2 rounded-lg p-1 cursor-pointer bg-zinc-200 hover:bg-zinc-300 click:bg-zinc-400">
+        <p class="my-auto p-1 nowrap mr-auto text-2xl">
           1 in
         </p>
-        <img src="/chevron-right-3.svg" alt="Chevron Right 3" class="my-auto h-2 p-1">
+        <img src="/chevron-right-3.svg" alt="Chevron Right 3" class="my-auto h-16 p-1">
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.p-1{
-  margin: 2px;
-}
-.h-2{
-  height: 2rem;
-}
 
 .nowrap{
   text-wrap: nowrap;
 }
 
-.flex-max{
-  flex: max-content;
-}
 
 .debug{
   border: red 2px solid;
-}
-
-.white{
-  stroke: #e8e8e8;
-  fill: #e8e8e8;
-}
-.w-8v{
-  width: 8vw;
-}
-.h-10v{
-  height: 10vh;
-}
-.flex {
-  display: flex;
-}
-
-
-.button-div {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  transition: border-color 0.25s;
-  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
-  margin: 0px 10px;
-  outline: none;
-  color: #ffffff;
-  background-color: #0f0f0f98;
-  cursor: pointer;
-}
-
-
-.button-div:hover {
-  border-color: #396cd8;
-}
-.button-div:active {
-  border-color: #396cd8;
-  background-color: #0f0f0f69;
 }
 
 
@@ -213,36 +153,5 @@ function constrain(min: number, value: number, max: number): number{
   display: flex;
   flex-direction: row;
 }
-.upper-buttons{
-  display: flex;
-  flex-direction: row;
-}
 
-.padding-8px{
-  padding: 8px;
-}
-
-.flex-right{
-  margin-left: auto;
-}
-.my-auto{
-  margin-top: auto;
-  margin-bottom: auto;
-}
-.toolbar{
-  display: flex;
-  height: 50px;
-  margin-bottom: auto;
-  border-bottom: #2f2f2f 5px ridge;
-}
-.icon{
-  width: 1cap;
-  height: 1cap;
-  margin: auto;
-}
-.big-icon{
-  width: auto;
-  height: 2cap;
-  margin: auto;
-}
 </style>
