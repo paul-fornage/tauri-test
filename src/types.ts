@@ -3,4 +3,5 @@ export enum Mode {
     Manual,
     Home,
     CameraPreview,
+    Terminal,
 }

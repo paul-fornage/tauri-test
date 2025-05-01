@@ -37,9 +37,10 @@ onMounted(async () => {
     </div>
 
     <div class="flex gap-4 mx-4">
-      <Button @click="modeChange(Mode.Execute)" text="Execute Mode" class="flex-1/3 h-32 text-2xl"/>
-      <Button @click="modeChange(Mode.Manual)" text="Manual Mode" class="flex-1/3 h-32 text-2xl"/>
-      <Button @click="modeChange(Mode.CameraPreview)" text="Camera Preview" class="flex-1/3 h-32 text-2xl"/>
+      <Button @click="modeChange(Mode.Execute)" text="Execute" class="flex-1/3 h-32 text-2xl"/>
+      <Button @click="modeChange(Mode.Manual)" text="Manual" class="flex-1/3 h-32 text-2xl"/>
+      <Button @click="modeChange(Mode.CameraPreview)" text="Camera" class="flex-1/3 h-32 text-2xl"/>
+      <Button @click="modeChange(Mode.Terminal)" text="Terminal" class="flex-1/3 h-32 text-2xl"/>
     </div>
   </main>
 </template>

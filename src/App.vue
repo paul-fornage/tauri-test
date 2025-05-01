@@ -9,6 +9,7 @@ import CameraPreview from "./CameraPreview.vue";
 import {
   info,
 } from '@tauri-apps/plugin-log';
+import TerminalMode from "./TerminalMode.vue";
 
 const currentMode = ref<Mode>(Mode.Home);
 
@@ -31,7 +32,9 @@ function handleModeChange(mode: Mode) {
   <CameraPreview
       v-if="currentMode==Mode.CameraPreview"
       @mode-change="handleModeChange"></CameraPreview>
-
+  <TerminalMode
+      v-if="currentMode==Mode.Terminal"
+      @mode-change="handleModeChange"></TerminalMode>
 </template>
 
 
