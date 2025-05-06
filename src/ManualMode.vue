@@ -1,14 +1,21 @@
 <script setup lang="ts">
 import {ref} from 'vue';
-import {ActuatorState, Mode} from './types.ts'
+import {Actuator, Mode} from './types.ts'
 import ModeToolbar from "./ModeToolbar.vue";
 import Button from "./Button.vue";
-import {MiTcpMessage} from "./MiTcp.ts";
+import {MiTcpMessage, MessageHeader} from "./MiTcp.ts";
+import ActuatorButton from "./ActuatorButton.vue";
+import {info} from "@tauri-apps/plugin-log";
 
 const emit = defineEmits<{
   (e: 'modeChange', mode: Mode): void
   (e: 'sendMessage', message: MiTcpMessage): void
 }>()
+
+const props = defineProps<{
+  finger_state: Actuator
+  roller_state: Actuator
+}>();
 
 async function homeClicked() {
   console.log("change to home")
@@ -35,24 +42,17 @@ function constrain(min: number, value: number, max: number): number{
   }
 }
 
-const fingers_state = ref<ActuatorState>(ActuatorState.Unknown);
-function getActuatorButtonClass(state: ActuatorState): string {
-  switch (state) {
-    case ActuatorState.Engaged:
-      return "border-green-700 text-green-900";
-    case ActuatorState.Disengaged:
-      return "border-red-600 text-red-900";
-    case ActuatorState.Unknown:
-      return "border-gray-400 text-gray-900";
+
+
+function toggleActuator(actuator: Actuator) {
+  const message = actuator.toggleCommanded();
+  if(message != null) {
+    info("send message from ManualMode: " + message)
+    emit("sendMessage", message)
   }
 }
 
-function toggleFingers() {
-  fingers_state.value = ActuatorState.Unknown;
-  emit("sendMessage", {
 
-  })
-}
 
 </script>
 
@@ -75,12 +75,19 @@ function toggleFingers() {
       <Button text="Set job park to current position" />
     </div>
     <div class="flex flex-col flex-1/4 mx-2">
-      <Button text="Mandrel Latch" class=""/>
-      <Button :text="fingers_state"
-              @clicked="toggleFingers"
-              :class="getActuatorButtonClass(fingers_state)"
+      <Button
+          text="Mandrel Latch"
       />
-      <Button text="Roller" />
+      <ActuatorButton
+          actuatorName="Fingers"
+          @clicked="toggleActuator(finger_state)"
+          :actuatorState="props.finger_state"
+      />
+      <ActuatorButton
+          actuatorName="Roller"
+          @clicked="toggleActuator(roller_state)"
+          :actuatorState="props.roller_state"
+      />
     </div>
   </div>
   <div class="m-2 select-none">

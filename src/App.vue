@@ -3,15 +3,13 @@ import Home from "./Home.vue";
 import ExecuteMode from "./ExecuteMode.vue";
 import ManualMode from "./ManualMode.vue";
 import CameraPreview from "./CameraPreview.vue";
-import {
-  info,
-} from '@tauri-apps/plugin-log';
+import {info,} from '@tauri-apps/plugin-log';
 import TerminalMode from "./TerminalMode.vue";
-import { Mode } from './types';
-import { ref, onMounted, onUnmounted } from 'vue';
-import { send, listen, bind, unbind, Payload } from "@kuyoonjo/tauri-plugin-tcp";
-import { Event } from "@tauri-apps/api/event";
-import { MiTcpMessage, encodeMessage } from "./MiTcp.ts";
+import {Actuator, Mode} from './types';
+import {onMounted, onUnmounted, ref} from 'vue';
+import {bind, listen, Payload, send, unbind} from "@kuyoonjo/tauri-plugin-tcp";
+import {Event} from "@tauri-apps/api/event";
+import {encodeMessage, MessageHeader, MiTcpMessage} from "./MiTcp.ts";
 
 
 // Server side
@@ -19,14 +17,17 @@ const sid = 'unique-server-id';
 
 const connectionInfo = ref<string|null>(null);
 
-
+const finger_state = ref<Actuator>(new Actuator());
+const roller_state = ref<Actuator>(new Actuator())
 
 const TcpLog = ref<string[]>([]);
 
+let sendInterval: number | undefined;
 
 const PORT = 8888;
 
 async function sendMiTcp(message: MiTcpMessage) {
+  info("sending MiTcp message: " + message);
   const encoded_message = encodeMessage(message);
   await sendMessage(encoded_message);
 }
@@ -39,10 +40,6 @@ async function callback_handler(payload: Payload) {
     TcpLog.value.push(payload.event.message.addr + "->" + message_text);
   } else if (payload.event.connect) {
     info("connect: " + payload.event.connect);
-    if(connectionInfo.value != null) {
-      info(payload.event.connect + "tried to connect when a client was already connected. Ignoring.");
-      return;
-    }
     TcpLog.value.push("connect: " + payload.event.connect);
     connectionInfo.value = payload.event.connect;
   } else if (payload.event.disconnect) {
@@ -77,12 +74,23 @@ onMounted(async () => {
   unsubscribe = await listen((x: Event<Payload>) => {
     callback_handler(x.payload);
   });
+  sendInterval = window.setInterval(() => {
+    const message: MiTcpMessage = {
+      header: MessageHeader.ReadRequest,
+      target: "finger_state",
+    }
+    sendMiTcp(message).catch((err) => console.error('Failed to send message:', err));
+  }, 1000);
+
 });
 
 onUnmounted(async () => {
   await unbind(sid);
   if (unsubscribe) {
     unsubscribe();
+  }
+  if (sendInterval) {
+    clearInterval(sendInterval);
   }
 });
 
@@ -103,6 +111,8 @@ function handleModeChange(mode: Mode) {
       v-if="currentMode==Mode.Execute"
       @mode-change="handleModeChange"></ExecuteMode>
   <ManualMode
+      :finger_state="finger_state"
+      :roller_state="roller_state"
       @sendMessage="sendMiTcp"
       v-if="currentMode==Mode.Manual"
       @mode-change="handleModeChange"></ManualMode>

@@ -8,10 +8,7 @@ export enum MessageHeader {
     ExecuteRequest = "Xr",
     ExecuteSuccess = "Xs",
     ExecuteFail = "Xf",
-}
-
-export enum ExCcTarget {
-
+    Broadcast = "Bc",
 }
 
 export interface MiTcpMessage {
@@ -26,7 +23,7 @@ function isMessageHeader(value: string): value is MessageHeader {
 
 
 export function decodeMessage(bytes: number[]): MiTcpMessage {
-    if (bytes.length < 6) { // Minimum length is now 6 bytes: 2 (header) + 2 (length) + 1 (target at least) + 1 (null terminator)
+    if (bytes.length < 5) { // Minimum length is now 5 bytes: 2 (header) + 1 (length) + 1 (target at least) + 1 (null terminator)
         throw new Error("Message too short");
     }
 
@@ -38,8 +35,8 @@ export function decodeMessage(bytes: number[]): MiTcpMessage {
 
     const header: MessageHeader = header_text as MessageHeader;
 
-    // Message length now uses 2 bytes: byte[2] and byte[3]
-    const length = (bytes[2] << 8) + bytes[3];
+    // Updated: Message length is now 1 byte
+    const length = bytes[2];
 
     if (bytes.length !== length || bytes[length - 1] !== 0) {
         throw new Error("Incoming message length does not match expected length or does not end with null");
@@ -48,16 +45,16 @@ export function decodeMessage(bytes: number[]): MiTcpMessage {
     let payload_start_index: number = 0;
     let contains_payload: boolean = false;
 
-    for (let i = 4; i < length; i++) {
+    for (let i = 3; i < length; i++) {
         if (bytes[i] === '\n'.charCodeAt(0)) {
             payload_start_index = i;
             contains_payload = true;
             break;
         }
     }
-    const target_end_index = contains_payload ? payload_start_index : length-1;
+    const target_end_index = contains_payload ? payload_start_index : length - 1;
 
-    const target = String.fromCharCode(...bytes.slice(4, target_end_index));
+    const target = String.fromCharCode(...bytes.slice(3, target_end_index));
 
     // If only the header and target exist (no payload)
     if (!contains_payload) {
@@ -66,7 +63,7 @@ export function decodeMessage(bytes: number[]): MiTcpMessage {
             target: target,
         };
     } else {
-        const payload: number[] = bytes.slice(payload_start_index+1, length-1);
+        const payload: number[] = bytes.slice(payload_start_index + 1, length - 1);
         return {
             header: header,
             target: target,
@@ -89,8 +86,8 @@ export function encodeMessage(message: MiTcpMessage): number[] {
     }
 
     // Step 3: Calculate total message length
-    // Base length: Header (2 bytes) + Length (2 bytes) + Target (variable part) + Null (1 byte)
-    let totalLength = 4 + targetBytes.length + 1;
+    // Base length: Header (2 bytes) + Length (1 byte) + Target (variable part) + Null (1 byte)
+    let totalLength = 3 + targetBytes.length + 1;
 
     const has_payload: boolean = message.data !== undefined;
     if (has_payload) {
@@ -98,28 +95,28 @@ export function encodeMessage(message: MiTcpMessage): number[] {
         totalLength += (message.data.length + 1);
     }
 
+    if (totalLength > 255) {
+        throw new Error("Message too long for 1-byte length field");
+    }
 
-    // Add the total length as 2 bytes
-    bytes.push((totalLength >> 8) & 0xff); // High byte
-    bytes.push(totalLength & 0xff); // Low byte
+    // Updated: Add the total length as 1 byte
+    bytes.push(totalLength & 0xff);
 
     // Step 4: Add the target name
     bytes.push(...targetBytes);
 
-
-
-    // Step 6: Add the data (payload) if it exists
+    // Step 5: Add the data (payload) if it exists
     if (has_payload) {
         bytes.push('\n'.charCodeAt(0));
         bytes.push(...message.data);
     }
 
+    // Add null terminator
     bytes.push(0);
 
     if (bytes.length !== totalLength) {
         throw new Error("Calculated length does not match actual length");
     }
-
 
     return bytes;
 }
