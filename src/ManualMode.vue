@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { Mode } from './types.ts'
+import {ref} from 'vue';
+import {ActuatorState, Mode} from './types.ts'
 import ModeToolbar from "./ModeToolbar.vue";
 import Button from "./Button.vue";
+import {MiTcpMessage} from "./MiTcp.ts";
 
 const emit = defineEmits<{
   (e: 'modeChange', mode: Mode): void
+  (e: 'sendMessage', message: MiTcpMessage): void
 }>()
 
 async function homeClicked() {
@@ -19,8 +21,6 @@ const minCommandedPosition = 0;
 const commanded_axis_pos = ref<number>(0)
 
 async function addToCommandedPosition(delta: number){
-  console.log("delta: " + typeof delta);
-  console.log("commanded_axis_pos.value: " + typeof commanded_axis_pos.value);
   const temp_value: number = delta + commanded_axis_pos.value;
   commanded_axis_pos.value = constrain(minCommandedPosition, temp_value, maxCommandedPosition)
 }
@@ -35,6 +35,25 @@ function constrain(min: number, value: number, max: number): number{
   }
 }
 
+const fingers_state = ref<ActuatorState>(ActuatorState.Unknown);
+function getActuatorButtonClass(state: ActuatorState): string {
+  switch (state) {
+    case ActuatorState.Engaged:
+      return "border-green-700 text-green-900";
+    case ActuatorState.Disengaged:
+      return "border-red-600 text-red-900";
+    case ActuatorState.Unknown:
+      return "border-gray-400 text-gray-900";
+  }
+}
+
+function toggleFingers() {
+  fingers_state.value = ActuatorState.Unknown;
+  emit("sendMessage", {
+
+  })
+}
+
 </script>
 
 <template>
@@ -43,7 +62,7 @@ function constrain(min: number, value: number, max: number): number{
       @homeClicked="homeClicked"
   />
 
-  <div class="flex border-b-2 p-4">
+  <div class="flex border-b-2 p-4 select-none">
     <div class="flex flex-col flex-1/4 mx-2">
       <Button text="Run Axis Homing Sequence" />
       <Button text="Return to home" />
@@ -56,12 +75,15 @@ function constrain(min: number, value: number, max: number): number{
       <Button text="Set job park to current position" />
     </div>
     <div class="flex flex-col flex-1/4 mx-2">
-      <Button text="Toggle Clamps" />
-      <Button text="Fingers" />
+      <Button text="Mandrel Latch" class=""/>
+      <Button :text="fingers_state"
+              @clicked="toggleFingers"
+              :class="getActuatorButtonClass(fingers_state)"
+      />
       <Button text="Roller" />
     </div>
   </div>
-  <div class="m-2">
+  <div class="m-2 select-none">
     <h1 class="mx-auto text-center">
       {{commanded_axis_pos.toFixed(2)}}
     </h1>
@@ -136,6 +158,7 @@ function constrain(min: number, value: number, max: number): number{
 }
 
 
+
 .axis-slider {
   -webkit-appearance: none;  /* Override default CSS styles */
   appearance: none;
@@ -178,5 +201,6 @@ function constrain(min: number, value: number, max: number): number{
   display: flex;
   flex-direction: row;
 }
+
 
 </style>
