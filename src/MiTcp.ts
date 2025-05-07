@@ -17,6 +17,13 @@ export interface MiTcpMessage {
     data?: number[]
 }
 
+export function toString(message: MiTcpMessage): string {
+    const { header, target, data } = message;
+    const dataStr = data ? data.join(", ") : "None";
+    return `MiTcpMessage { header: ${header}, target: ${target}, data: [${dataStr}] }`;
+}
+
+
 function isMessageHeader(value: string): value is MessageHeader {
     return Object.values(MessageHeader).includes(value as MessageHeader);
 }

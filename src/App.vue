@@ -9,7 +9,7 @@ import {Actuator, Mode} from './types';
 import {onMounted, onUnmounted, ref} from 'vue';
 import {bind, listen, Payload, send, unbind} from "@kuyoonjo/tauri-plugin-tcp";
 import {Event} from "@tauri-apps/api/event";
-import {encodeMessage, MessageHeader, MiTcpMessage} from "./MiTcp.ts";
+import {decodeMessage, encodeMessage, MessageHeader, MiTcpMessage, toString} from "./MiTcp.ts";
 
 
 // Server side
@@ -35,9 +35,9 @@ async function sendMiTcp(message: MiTcpMessage) {
 async function callback_handler(payload: Payload) {
   info("new callback: " + payload.event);
   if (payload.event.message) {
-    const message_text: String = String.fromCharCode(...payload.event.message.data)
-    info("message from " + payload.event.message.addr + ": " + message_text);
-    TcpLog.value.push(payload.event.message.addr + "->" + message_text);
+    const mitcp_message: MiTcpMessage = decodeMessage(payload.event.message.data)
+    info("message from " + payload.event.message.addr + ": " + toString(mitcp_message));
+    TcpLog.value.push(payload.event.message.addr + "->" + toString(mitcp_message));
   } else if (payload.event.connect) {
     info("connect: " + payload.event.connect);
     TcpLog.value.push("connect: " + payload.event.connect);
