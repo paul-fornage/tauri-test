@@ -19,8 +19,33 @@ class RemoteVariableF64 implements RemoteVariable<number> {
     }
 
     toBytes(): Uint8Array {
-        return new Uint8Array([this.value]);
+        if (this.value === undefined) {
+            throw new Error("Value is undefined");
+        }
+
+        // Create a buffer to hold 8 bytes (64 bits)
+        const buffer = new ArrayBuffer(8);
+        const view = new DataView(buffer);
+
+        // Set the value as a 64-bit float (big-endian encoding)
+        view.setFloat64(0, this.value, false); // false for big-endian
+
+        return new Uint8Array(buffer);
     }
+
+
+    fromBytes(bytes: Uint8Array): void {
+        if (bytes.length !== 8) {
+            throw new Error("Invalid byte array length for a 64-bit float");
+        }
+
+        // Create a DataView from the bytes
+        const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+
+        // Get the value as a 64-bit float (big-endian decoding)
+        this.value = view.getFloat64(0, false); // false for big-endian
+    }
+
 }
 
 export enum Mode {
