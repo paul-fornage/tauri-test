@@ -1,6 +1,28 @@
 import {MessageHeader, MiTcpMessage} from "./MiTcp.ts";
 
 
+
+interface RemoteVariable<T> {
+    name: string;
+    value?: T;
+    toBytes(): Uint8Array;
+    readBytes(bytes: Uint8Array): void;
+}
+
+class RemoteVariableF64 implements RemoteVariable<number> {
+    name: string;
+    value?: number;
+
+    constructor(name: string, value?: number) {
+        this.name = name;
+        this.value = value;
+    }
+
+    toBytes(): Uint8Array {
+        return new Uint8Array([this.value]);
+    }
+}
+
 export enum Mode {
     Execute,
     Manual,

@@ -17,8 +17,7 @@ const sid = 'unique-server-id';
 
 const connectionInfo = ref<string|null>(null);
 
-const finger_state = ref<Actuator>(new Actuator());
-const roller_state = ref<Actuator>(new Actuator())
+
 
 const TcpLog = ref<string[]>([]);
 
