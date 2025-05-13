@@ -1,25 +1,27 @@
 <script setup lang="ts">
 import { Mode } from './types';
 import ModeToolbar from "./ModeToolbar.vue";
-import { ref, onMounted, onUnmounted } from 'vue';
-import { send, listen, bind, unbind, Payload } from "@kuyoonjo/tauri-plugin-tcp";
+import {ref, computed, ComputedRef} from 'vue';
+import {info} from "@tauri-apps/plugin-log";
 
-// Server side
-const sid = 'unique-server-id';
 
-const clientConnected = ref(false);
-const clientIp = ref('');
-const connectionInfo = ref("not connected");
-const messages = ref<string[]>([]);
+
 const inputMessage = ref('');
+
+const props = defineProps<{
+  connectionInfo: string|null,
+  tcpLog: string[],
+}>();
 
 const PORT = 8888;
 
-let intervalId: number;
-
+const clientConnected: ComputedRef<boolean> = computed(() => {
+  return props.connectionInfo !== null;
+})
 
 const emit = defineEmits<{
   (e: 'modeChange', mode: Mode): void
+  (e: 'sendTcpMessage', message: string): void
 }>();
 
 
@@ -27,51 +29,11 @@ async function homeClicked() {
   emit("modeChange", Mode.Home);
 }
 
-async function new_message_handler(payload: Payload) {
-  console.log("new message: " + payload.event.message);
-  messages.value.push(payload.event.message);
+async function sendMessage() {
+  const message_text: string = inputMessage.value + '\n'
+  emit("sendTcpMessage", message_text);
+  inputMessage.value = '';
 }
-
-const sendMessage = async () => {
-  if (clientConnected.value) {
-    await send(sid, inputMessage.value);
-    messages.value.push(inputMessage.value);
-    inputMessage.value = '';
-  }
-}
-
-onMounted(async () => {
-  await bind(sid, '0.0.0.0:'+PORT);
-  connectionInfo.value = "Waiting for connection";
-  await listen((x) => {
-    console.log(x.payload);
-    if (x.payload.id === sid && x.payload.event.connect) {
-      clientIp.value = x.payload.event.connect;
-      connectionInfo.value = "Connected to " + clientIp.value;
-      clientConnected.value = true;
-    }
-  });
-  intervalId = setInterval(() => {
-    listen((x) => {
-      new_message_handler(x);
-      if (x.payload.id === sid && x.payload.event.connect) {
-        clientIp.value = x.payload.event.connect;
-        connectionInfo.value = "Connected to " + clientIp.value;
-        clientConnected.value = true;
-      }
-    })
-    // You can add your actual logic here
-  }, 10);
-});
-
-onUnmounted(async () => {
-  await unbind(sid);
-  connectionInfo.value = "not connected";
-  clientIp.value = '';
-  clientConnected.value = false;
-  clearInterval(intervalId);
-
-})
 
 </script>
 
@@ -89,7 +51,7 @@ onUnmounted(async () => {
         <div v-else class="text-blue-400 mb-2">
           {{ connectionInfo }}
         </div>
-        <div v-for="(message, index) in messages" :key="index">
+        <div v-for="(message, index) in tcpLog" :key="index">
           {{ message }}
         </div>
       </div>

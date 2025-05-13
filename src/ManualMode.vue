@@ -1,12 +1,21 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { Mode } from './types.ts'
+import {ref} from 'vue';
+import {Actuator, Mode} from './types.ts'
 import ModeToolbar from "./ModeToolbar.vue";
 import Button from "./Button.vue";
+import {MiTcpMessage, MessageHeader} from "./MiTcp.ts";
+import ActuatorButton from "./ActuatorButton.vue";
+import {info} from "@tauri-apps/plugin-log";
 
 const emit = defineEmits<{
   (e: 'modeChange', mode: Mode): void
+  (e: 'sendMessage', message: MiTcpMessage): void
 }>()
+
+const props = defineProps<{
+  finger_state: Actuator
+  roller_state: Actuator
+}>();
 
 async function homeClicked() {
   console.log("change to home")
@@ -19,8 +28,6 @@ const minCommandedPosition = 0;
 const commanded_axis_pos = ref<number>(0)
 
 async function addToCommandedPosition(delta: number){
-  console.log("delta: " + typeof delta);
-  console.log("commanded_axis_pos.value: " + typeof commanded_axis_pos.value);
   const temp_value: number = delta + commanded_axis_pos.value;
   commanded_axis_pos.value = constrain(minCommandedPosition, temp_value, maxCommandedPosition)
 }
@@ -35,6 +42,18 @@ function constrain(min: number, value: number, max: number): number{
   }
 }
 
+
+
+function toggleActuator(actuator: Actuator) {
+  const message = actuator.toggleCommanded();
+  if(message != null) {
+    info("send message from ManualMode: " + message)
+    emit("sendMessage", message)
+  }
+}
+
+
+
 </script>
 
 <template>
@@ -43,7 +62,7 @@ function constrain(min: number, value: number, max: number): number{
       @homeClicked="homeClicked"
   />
 
-  <div class="flex border-b-2 p-4">
+  <div class="flex border-b-2 p-4 select-none">
     <div class="flex flex-col flex-1/4 mx-2">
       <Button text="Run Axis Homing Sequence" />
       <Button text="Return to home" />
@@ -56,12 +75,22 @@ function constrain(min: number, value: number, max: number): number{
       <Button text="Set job park to current position" />
     </div>
     <div class="flex flex-col flex-1/4 mx-2">
-      <Button text="Toggle Clamps" />
-      <Button text="Fingers" />
-      <Button text="Roller" />
+      <Button
+          text="Mandrel Latch"
+      />
+      <ActuatorButton
+          actuatorName="Fingers"
+          @clicked="toggleActuator(finger_state)"
+          :actuatorState="props.finger_state"
+      />
+      <ActuatorButton
+          actuatorName="Roller"
+          @clicked="toggleActuator(roller_state)"
+          :actuatorState="props.roller_state"
+      />
     </div>
   </div>
-  <div class="m-2">
+  <div class="m-2 select-none">
     <h1 class="mx-auto text-center">
       {{commanded_axis_pos.toFixed(2)}}
     </h1>
@@ -136,6 +165,7 @@ function constrain(min: number, value: number, max: number): number{
 }
 
 
+
 .axis-slider {
   -webkit-appearance: none;  /* Override default CSS styles */
   appearance: none;
@@ -178,5 +208,6 @@ function constrain(min: number, value: number, max: number): number{
   display: flex;
   flex-direction: row;
 }
+
 
 </style>
