@@ -4,94 +4,94 @@ import ExecuteMode from "./ExecuteMode.vue";
 import ManualMode from "./ManualMode.vue";
 import CameraPreview from "./CameraPreview.vue";
 import {info,} from '@tauri-apps/plugin-log';
-import TerminalMode from "./TerminalMode.vue";
 import {Actuator, Mode} from './types';
 import {onMounted, onUnmounted, ref} from 'vue';
-import {bind, listen, Payload, send, unbind} from "@kuyoonjo/tauri-plugin-tcp";
 import {Event} from "@tauri-apps/api/event";
-import {decodeMessage, encodeMessage, MessageHeader, MiTcpMessage, toString} from "./MiTcp.ts";
+import Modbus from 'jsmodbus'
+import { Socket, SocketConnectOpts } from 'net'
 
+const socket = new Socket()
 
-// Server side
-const sid = 'unique-server-id';
+const options: SocketConnectOpts = {
+  host: '192.168.1.17',
+  port: 502
+}
+const client = new Modbus.client.TCP(socket)
 
-const connectionInfo = ref<string|null>(null);
+let successCount = 0
+let errorCount = 0
+let reconnectCount = 0
+let closedOnPurpose = false
+let firstTime = true
 
+const readStart = 0;
+const readCount = 10;
 
+const start = function () {
+  console.log('Starting request...')
 
-const TcpLog = ref<string[]>([]);
+  client.readHoldingRegisters(readStart, readCount)
+      .then(({ metrics, request, response }) => {
+        successCount += 1
 
-let sendInterval: number | undefined;
+        console.log('Transfer Time: ' + metrics.transferTime)
+        console.log('Response Body Payload: ' + response.body.valuesAsArray)
+        console.log('Response Body Payload As Buffer: ' + response.body.valuesAsBuffer)
 
-const PORT = 8888;
+        console.log('Success', successCount, 'Errors', errorCount, 'Reconnect', reconnectCount)
+        console.log('Request finished successfull.')
 
-async function sendMiTcp(message: MiTcpMessage) {
-  info("sending MiTcp message: " + message);
-  const encoded_message = encodeMessage(message);
-  await sendMessage(encoded_message);
+        setTimeout(start, 2000)
+      })
+      .catch(err => {
+        console.error(err)
+        errorCount += 1
+
+        console.log('Success', successCount, 'Errors', errorCount, 'Reconnect', reconnectCount)
+
+        console.log('Request finished Unsuccessfully.')
+      })
 }
 
-async function callback_handler(payload: Payload) {
-  info("new callback: " + payload.event);
-  if (payload.event.message) {
-    const mitcp_message: MiTcpMessage = decodeMessage(payload.event.message.data)
-    info("message from " + payload.event.message.addr + ": " + toString(mitcp_message));
-    TcpLog.value.push(payload.event.message.addr + "->" + toString(mitcp_message));
-  } else if (payload.event.connect) {
-    info("connect: " + payload.event.connect);
-    TcpLog.value.push("connect: " + payload.event.connect);
-    connectionInfo.value = payload.event.connect;
-  } else if (payload.event.disconnect) {
-    info("disconnect: " + payload.event.disconnect);
-    TcpLog.value.push("disconnect: " + payload.event.disconnect);
-    connectionInfo.value = null;
-  } else if (payload.event.bind) {
-    info("bind: " + payload.event.bind);
-    TcpLog.value.push("bind: " + payload.event.bind);
-  } else if (payload.event.unbind) {
-    info("unbind: " + payload.event.unbind);
-    TcpLog.value.push("unbind: " + payload.event.unbind);
+socket.on('connect', function () {
+  console.log('client connected.')
+  isConnected.value = false
+
+  if (firstTime) {
+    firstTime = false
   } else {
-    info("unkown event");
+    reconnectCount += 1
+  }
+
+  start()
+})
+
+const shutdown = () => {
+  closedOnPurpose = true
+  socket.end()
+}
+
+const reconnect = () => {
+  if (!closedOnPurpose) {
+    socket.connect(options)
   }
 }
 
-async function sendMessage(message_to_send: string|number[]) {
-  if (connectionInfo.value !== null) {
-    info("sending message: " + message_to_send);
-    await send(sid, message_to_send, connectionInfo.value);
-    TcpLog.value.push(connectionInfo.value + "<-" + message_to_send);
-  } else {
-    info("no connection to send message");
-  }
-}
+process.on('SIGTERM', shutdown)
+process.on('SIGINT', shutdown)
 
-let unsubscribe: () => void | undefined;
+socket.on('close', function () {
+  console.log('Socket closed, stopping interval.')
+  isConnected.value = false
+  reconnect()
+})
 
-onMounted(async () => {
-  await bind(sid, '0.0.0.0:'+PORT);
-  unsubscribe = await listen((x: Event<Payload>) => {
-    callback_handler(x.payload);
-  });
-  sendInterval = window.setInterval(() => {
-    const message: MiTcpMessage = {
-      header: MessageHeader.ReadRequest,
-      target: "finger_state",
-    }
-    sendMiTcp(message).catch((err) => console.error('Failed to send message:', err));
-  }, 1000);
+socket.on('error', function (err) {
+  console.log('Socket Error', err)
+})
 
-});
+const isConnected = ref<boolean>(false);
 
-onUnmounted(async () => {
-  await unbind(sid);
-  if (unsubscribe) {
-    unsubscribe();
-  }
-  if (sendInterval) {
-    clearInterval(sendInterval);
-  }
-});
 
 const currentMode = ref<Mode>(Mode.Home);
 
@@ -118,12 +118,6 @@ function handleModeChange(mode: Mode) {
   <CameraPreview
       v-if="currentMode==Mode.CameraPreview"
       @mode-change="handleModeChange"></CameraPreview>
-  <TerminalMode
-      :tcp-log="TcpLog"
-      :connection-info="connectionInfo"
-      @send-tcp-message="sendMessage"
-      v-if="currentMode==Mode.Terminal"
-      @mode-change="handleModeChange"></TerminalMode>
 </template>
 
 

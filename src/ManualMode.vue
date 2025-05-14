@@ -3,13 +3,11 @@ import {ref} from 'vue';
 import {Actuator, Mode} from './types.ts'
 import ModeToolbar from "./ModeToolbar.vue";
 import Button from "./Button.vue";
-import {MiTcpMessage, MessageHeader} from "./MiTcp.ts";
 import ActuatorButton from "./ActuatorButton.vue";
 import {info} from "@tauri-apps/plugin-log";
 
 const emit = defineEmits<{
   (e: 'modeChange', mode: Mode): void
-  (e: 'sendMessage', message: MiTcpMessage): void
 }>()
 
 const props = defineProps<{
