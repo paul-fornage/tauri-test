@@ -10,6 +10,8 @@ import {Event} from "@tauri-apps/api/event";
 import { invoke } from '@tauri-apps/api/core';
 import * as Register from './RegisterDefinitions.ts';
 
+// TODO: https://github.com/tauri-apps/plugins-workspace/tree/v2/plugins/autostart
+// TODO: https://v2.tauri.app/plugin/updater/
 
 const connectedSocket = ref<string>("Socket Address");
 const local_ip_addr = ref<string>("Ip Address");
@@ -40,7 +42,8 @@ onMounted(async () => {
 
       // Register.debug_print_coils();
     }
-  }, 20);
+  }, 50);
+
 
 
   await invoke("set_target_socket", {socket: "192.168.1.26:502"}).catch((err) => {warn("set_target_socket returns error variant: " + err);});

@@ -121,21 +121,24 @@ export class HregRegisterRange {
         const result: string[] = [];
         for (const value of this.values) {
             // Stop if a null byte (0) is encountered
-            if (value === 0) {
-                break;
-            }
+
 
             // Get high and low bytes of the 16-bit value
             const highByte = (value >> 8) & 0xFF;
             const lowByte = value & 0xFF;
 
             // Convert each byte to a character and append to the result
-            if (highByte !== 0) {
-                result.push(String.fromCharCode(highByte));
-            }
             if (lowByte !== 0) {
                 result.push(String.fromCharCode(lowByte));
+            } else {
+                break;
             }
+            if (highByte !== 0) {
+                result.push(String.fromCharCode(highByte));
+            } else {
+                break;
+            }
+
         }
 
         // Join characters and return as string
