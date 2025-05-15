@@ -1,5 +1,5 @@
-
 use thiserror::Error;
+
 
 #[derive(Error, Debug)]
 pub enum HmPiError {
@@ -7,4 +7,6 @@ pub enum HmPiError {
     ModbusError(#[from] tokio_modbus::Error),
     #[error("Modbus Exception: {0:?}")]
     ModbusException(#[from] tokio_modbus::ExceptionCode),
+    #[error("Local IP error")]
+    LocalIpError(#[from] local_ip_address::Error),
 }
