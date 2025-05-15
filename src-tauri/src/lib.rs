@@ -10,9 +10,11 @@ use tokio::sync::{Mutex, MutexGuard};
 use tokio_modbus::client::Context;
 use crate::app_state::AppState;
 
+
 mod modbus;
 pub mod error;
 mod app_state;
+mod tauri_mb_commands;
 
 pub const DEFAULT_SOCKET_ADDR: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 552);
 pub const STATE_MUTEX_TIMOUT: Duration = Duration::new(0, 100_000_000); // 100ms
@@ -99,13 +101,6 @@ async fn reset_connection(state: State<'_, Mutex<AppState>>) -> Result<(), Strin
     }
 }
 
-
-#[tauri::command]
-async fn read_hreg(state: State<'_, Mutex<AppState>>, address: u16) -> Result<u16, String> {
-    
-}
-
-
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -120,8 +115,18 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             get_ip_addr,
-            get_connection_state_str,
-            my_custom_command,
+            get_connection_state_name,
+            get_connected_socket_addr,
+            get_connection_state_info,
+            reset_connection,
+            tauri_mb_commands::read_hreg,
+            tauri_mb_commands::read_hregs,
+            tauri_mb_commands::write_hreg,
+            tauri_mb_commands::write_hregs,
+            tauri_mb_commands::read_coil,
+            tauri_mb_commands::read_coils,
+            tauri_mb_commands::write_coil,
+            tauri_mb_commands::write_coils,
         ])
         
         .run(tauri::generate_context!())
