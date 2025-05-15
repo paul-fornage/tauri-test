@@ -5,22 +5,20 @@ import ModeToolbar from "./ModeToolbar.vue";
 import Button from "./Button.vue";
 import ActuatorButton from "./ActuatorButton.vue";
 import {info} from "@tauri-apps/plugin-log";
+import * as Register from './RegisterDefinitions.ts';
 
 const emit = defineEmits<{
   (e: 'modeChange', mode: Mode): void
 }>()
 
-const props = defineProps<{
-  finger_state: Actuator
-  roller_state: Actuator
-}>();
+
 
 async function homeClicked() {
   console.log("change to home")
   emit("modeChange", Mode.Home)
 }
 
-const maxCommandedPosition = 48;
+const maxCommandedPosition = 47;
 const minCommandedPosition = 0;
 
 const commanded_axis_pos = ref<number>(0)
@@ -42,11 +40,23 @@ function constrain(min: number, value: number, max: number): number{
 
 
 
-function toggleActuator(actuator: Actuator) {
-  const message = actuator.toggleCommanded();
-  if(message != null) {
-    info("send message from ManualMode: " + message)
-    emit("sendMessage", message)
+function toggleFingers() {
+  if(Register.cc_commanded_fingers.value.value){
+    Register.is_finger_up_latched.value.write_value(true);
+    info("Fingers up latched")
+  } else {
+    Register.is_finger_down_latched.value.write_value(true);
+    info("Fingers down latched")
+  }
+}
+
+function toggleRoller() {
+  if(Register.cc_commanded_roller.value.value){
+    Register.is_roller_up_latched.value.write_value(true);
+    info("Roller up latched")
+  } else {
+    Register.is_roller_down_latched.value.write_value(true);
+    info("Roller down latched")
   }
 }
 
@@ -73,18 +83,23 @@ function toggleActuator(actuator: Actuator) {
       <Button text="Set job park to current position" />
     </div>
     <div class="flex flex-col flex-1/4 mx-2">
-      <Button
-          text="Mandrel Latch"
+      <ActuatorButton
+          actuatorName="Mandrel latch"
+          @clicked=""
+          :actuatorSensed="Register.is_mandrel_latch_closed.value.value"
+          :actuatorCommanded="Register.is_mandrel_latch_closed.value.value"
       />
       <ActuatorButton
           actuatorName="Fingers"
-          @clicked="toggleActuator(finger_state)"
-          :actuatorState="props.finger_state"
+          @clicked="toggleFingers()"
+          :actuatorSensed="Register.is_fingers_down.value.value"
+          :actuatorCommanded="Register.cc_commanded_fingers.value.value"
       />
       <ActuatorButton
           actuatorName="Roller"
-          @clicked="toggleActuator(roller_state)"
-          :actuatorState="props.roller_state"
+          @clicked="toggleRoller()"
+          :actuatorSensed="Register.is_roller_down.value.value"
+          :actuatorCommanded="Register.cc_commanded_roller.value.value"
       />
     </div>
   </div>

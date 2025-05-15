@@ -3,97 +3,65 @@ import Home from "./Home.vue";
 import ExecuteMode from "./ExecuteMode.vue";
 import ManualMode from "./ManualMode.vue";
 import CameraPreview from "./CameraPreview.vue";
-import {info,} from '@tauri-apps/plugin-log';
+import {info,warn} from '@tauri-apps/plugin-log';
 import {Actuator, Mode} from './types';
 import {onMounted, onUnmounted, ref} from 'vue';
 import {Event} from "@tauri-apps/api/event";
-import Modbus from 'jsmodbus'
-import { Socket, SocketConnectOpts } from 'net'
+import { invoke } from '@tauri-apps/api/core';
+import * as Register from './RegisterDefinitions.ts';
 
-const socket = new Socket()
 
-const options: SocketConnectOpts = {
-  host: '192.168.1.17',
-  port: 502
-}
-const client = new Modbus.client.TCP(socket)
-
-let successCount = 0
-let errorCount = 0
-let reconnectCount = 0
-let closedOnPurpose = false
-let firstTime = true
-
-const readStart = 0;
-const readCount = 10;
-
-const start = function () {
-  console.log('Starting request...')
-
-  client.readHoldingRegisters(readStart, readCount)
-      .then(({ metrics, request, response }) => {
-        successCount += 1
-
-        console.log('Transfer Time: ' + metrics.transferTime)
-        console.log('Response Body Payload: ' + response.body.valuesAsArray)
-        console.log('Response Body Payload As Buffer: ' + response.body.valuesAsBuffer)
-
-        console.log('Success', successCount, 'Errors', errorCount, 'Reconnect', reconnectCount)
-        console.log('Request finished successfull.')
-
-        setTimeout(start, 2000)
-      })
-      .catch(err => {
-        console.error(err)
-        errorCount += 1
-
-        console.log('Success', successCount, 'Errors', errorCount, 'Reconnect', reconnectCount)
-
-        console.log('Request finished Unsuccessfully.')
-      })
-}
-
-socket.on('connect', function () {
-  console.log('client connected.')
-  isConnected.value = false
-
-  if (firstTime) {
-    firstTime = false
-  } else {
-    reconnectCount += 1
-  }
-
-  start()
-})
-
-const shutdown = () => {
-  closedOnPurpose = true
-  socket.end()
-}
-
-const reconnect = () => {
-  if (!closedOnPurpose) {
-    socket.connect(options)
-  }
-}
-
-process.on('SIGTERM', shutdown)
-process.on('SIGINT', shutdown)
-
-socket.on('close', function () {
-  console.log('Socket closed, stopping interval.')
-  isConnected.value = false
-  reconnect()
-})
-
-socket.on('error', function (err) {
-  console.log('Socket Error', err)
-})
-
-const isConnected = ref<boolean>(false);
-
+const connectedSocket = ref<string>("Socket Address");
+const local_ip_addr = ref<string>("Ip Address");
+const is_connected = ref<boolean>(false);
 
 const currentMode = ref<Mode>(Mode.Home);
+
+onMounted(async () => {
+
+  setInterval(async () => {
+    is_connected.value = ((await invoke("get_connection_state_name")) == "Connected");
+    connectedSocket.value = await invoke("get_connected_socket_addr");
+    local_ip_addr.value = await invoke("get_ip_addr");
+    if (!is_connected.value) {
+      warn("Not connected to socket, recconecting...");
+      await invoke("reset_connection").then(() => {
+        info("Reset connection success");
+      }).catch((err) => {
+        warn("Reset connection returns error variant: " + err);
+      })
+    }
+  }, 200);
+
+  setInterval(async () => {
+    if(is_connected.value){
+      Register.read_coils();
+      Register.read_hregs();
+
+      // Register.debug_print_coils();
+    }
+  }, 20);
+
+
+  await invoke("set_target_socket", {socket: "192.168.1.26:502"}).catch((err) => {warn("set_target_socket returns error variant: " + err);});
+  await invoke("get_target_socket").then((sock) => {info("retreived sock: " + sock)}).catch((err) => {warn("get_target_socket returns error variant: " + err);});
+
+  await invoke("get_connection_state_name").then(async (state_name) => {
+    // typeof state_name === "string"
+    if (state_name === "Connected") {
+      info("Already connected to socket");
+    } else {
+      info("Not connected to socket");
+      await invoke("reset_connection").then(() => {
+        info("Reset connection success");
+      }).catch((err) => {
+        warn("Reset connection returns error variant: " + err);
+      })
+    }
+  })
+
+
+})
 
 function handleModeChange(mode: Mode) {
   currentMode.value = mode;
@@ -104,15 +72,14 @@ function handleModeChange(mode: Mode) {
 
 <template>
   <Home
+      :local_ip="local_ip_addr"
+      :remote_sock_addr="connectedSocket"
       v-if="currentMode==Mode.Home"
       @mode-change="handleModeChange"></Home>
   <ExecuteMode
       v-if="currentMode==Mode.Execute"
       @mode-change="handleModeChange"></ExecuteMode>
   <ManualMode
-      :finger_state="finger_state"
-      :roller_state="roller_state"
-      @sendMessage="sendMiTcp"
       v-if="currentMode==Mode.Manual"
       @mode-change="handleModeChange"></ManualMode>
   <CameraPreview

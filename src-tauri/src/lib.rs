@@ -2,6 +2,7 @@ use std::convert::Infallible;
 use log::{info, warn};
 use serde::Serialize;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+use std::str::FromStr;
 use std::time::Duration;
 use crate::error::HmPiError;
 use tauri::{Manager, State};
@@ -24,13 +25,39 @@ pub const STATE_MUTEX_TIMOUT: Duration = Duration::new(0, 100_000_000); // 100ms
 fn get_ip_addr() -> Result<String, String>  {
     match local_ip_address::local_ip() {
         Ok(ip) => {
-            info!("Ip address: {:?}", ip);
             Ok(ip.to_string())
         },
         Err(e) => Err(HmPiError::from(e).to_string())
     }
 }
 
+#[tauri::command]
+async fn get_target_socket(state: State<'_, Mutex<AppState>>) -> Result<String, String> {
+    match tokio::time::timeout(STATE_MUTEX_TIMOUT, state.lock()).await {
+        Ok(state) => {
+            Ok(state.target_socket_address.to_string())
+        },
+        Err(_) => {
+            warn!("Timeout while getting app state");
+            Err(HmPiError::ModbusLockTimeout.to_string())
+        }
+    }
+}
+
+#[tauri::command]
+async fn set_target_socket(state: State<'_, Mutex<AppState>>, socket: String) -> Result<(), String> {
+    match tokio::time::timeout(STATE_MUTEX_TIMOUT, state.lock()).await {
+        Ok(mut state) => {
+            let socket_addr = SocketAddr::from_str(&socket).map_err(|e| e.to_string())?;
+            state.target_socket_address = socket_addr;
+            Ok(())
+        },
+        Err(_) => {
+            warn!("Timeout while getting app state");
+            Err(HmPiError::ModbusLockTimeout.to_string())
+        }
+    }
+}
 
 
 #[tauri::command]
@@ -40,7 +67,7 @@ async fn get_connection_state_name(state: State<'_, Mutex<AppState>>) -> Result<
             Ok(state.connection_state.state_name())
         },
         Err(_) => {
-            warn!("Timeout while getting connection state");
+            warn!("Timeout while getting app state");
             Err(HmPiError::ModbusLockTimeout.to_string())
         }
     }
@@ -58,7 +85,7 @@ async fn get_connected_socket_addr(state: State<'_, Mutex<AppState>>) -> Result<
             }
         },
         Err(_) => {
-            warn!("Timeout while getting connection state");
+            warn!("Timeout while getting app state");
             Err(HmPiError::ModbusLockTimeout.to_string())
         }
     }
@@ -81,7 +108,7 @@ async fn get_connection_state_info(state: State<'_, Mutex<AppState>>) -> Result<
             }
         },
         Err(_) => {
-            warn!("Timeout while getting connection state");
+            warn!("Timeout while getting app state");
             Err(HmPiError::ModbusLockTimeout.to_string())
         }
     }
@@ -95,7 +122,7 @@ async fn reset_connection(state: State<'_, Mutex<AppState>>) -> Result<(), Strin
             state_guard.connection_state.reset(target_socket_address).await.map_err(|e| e.to_string())
         },
         Err(_) => {
-            warn!("Timeout while getting connection state");
+            warn!("Timeout while getting app state");
             Err(HmPiError::ModbusLockTimeout.to_string())
         }
     }
@@ -119,6 +146,8 @@ pub fn run() {
             get_connected_socket_addr,
             get_connection_state_info,
             reset_connection,
+            set_target_socket,
+            get_target_socket,
             tauri_mb_commands::read_hreg,
             tauri_mb_commands::read_hregs,
             tauri_mb_commands::write_hreg,

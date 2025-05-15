@@ -4,21 +4,20 @@ import { invoke } from "@tauri-apps/api/core";
 import { ref, onMounted } from 'vue';
 import Button from "./Button.vue";
 
-const ip_addr = ref<string>("Ip Address");
 
 const emit = defineEmits<{
   (e: 'modeChange', mode: Mode): void
 }>()
 
+const props = defineProps<{
+  local_ip: string,
+  remote_sock_addr: string
+}>();
+
 async function modeChange(mode: Mode) {
   console.log("modeChange: " + mode)
   emit('modeChange', mode)
 }
-
-onMounted(async () => {
-  ip_addr.value = await invoke("get_ip_addr");
-  console.log("ip_addr: " + ip_addr.value);
-})
 
 </script>
 
@@ -31,9 +30,14 @@ onMounted(async () => {
       <h2 class="mx-auto mt-3 text-center text-4xl ">
         Select operating mode
       </h2>
-      <p class="mx-auto mt-1 pb-2 mb-5 text-center text-sm border-b-2">
-        Local IP address: {{ip_addr}}
-      </p>
+      <div class="mt-1 pb-2 mb-5 border-b-2">
+        <p class="mx-auto text-center text-sm">
+          Local IP address: {{props.local_ip}}
+        </p>
+        <p class="mx-auto text-center text-sm">
+          Remote socket address: {{props.remote_sock_addr}}
+        </p>
+      </div>
     </div>
 
     <div class="flex gap-4 mx-4">

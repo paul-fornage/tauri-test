@@ -3,11 +3,9 @@ use tokio_modbus::client::{self, tcp, Client, Context, Reader};
 use crate::DEFAULT_SOCKET_ADDR;
 use log::{info, warn, debug};
 use crate::error::HmPiError;
-use crate::error::HmPiError::ModbusAlreadyConnected;
 
 pub mod commands;
-
-
+mod register;
 
 pub enum ConnectionState {
     Connected(Context, SocketAddr),
