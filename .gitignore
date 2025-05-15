@@ -23,6 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 
+pnpm-lock.yaml
 
 /src-tauri/Cargo.lock
 /src-tauri/target/
