@@ -27,7 +27,7 @@ serde_json = "1"
 log = "0.4.27"
 tauri-plugin-log = "2"
 tokio-modbus = { version = "0.16.1", default-features = false, features = ["tcp"] }
-tokio = "1.45.0"
+tokio = { version = "1.45.0", features = ["time"] }
 thiserror = "2.0.12"
 
 

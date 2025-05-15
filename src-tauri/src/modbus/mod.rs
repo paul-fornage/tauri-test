@@ -1,25 +1,76 @@
-use tokio_modbus::client::{self, tcp, Client, Reader};
-use crate::SOCKET_ADDR;
-use log::{info, warn};
+use std::net::SocketAddr;
+use tokio_modbus::client::{self, tcp, Client, Context, Reader};
+use crate::DEFAULT_SOCKET_ADDR;
+use log::{info, warn, debug};
+use crate::error::HmPiError;
+use crate::error::HmPiError::ModbusAlreadyConnected;
+
 pub mod commands;
-mod connection_state;
 
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut ctx: client::Context = tcp::connect(SOCKET_ADDR).await?;
 
-    println!("Fetching the coupler ID");
-    let data = ctx.read_input_registers(0x1000, 7).await??;
 
-    let bytes: Vec<u8> = data.iter().fold(vec![], |mut x, elem| {
-        x.push((elem & 0xff) as u8);
-        x.push((elem >> 8) as u8);
-        x
-    });
-    let id = String::from_utf8(bytes).unwrap();
-    println!("The coupler ID is '{id}'");
-
-    println!("Disconnecting");
-    ctx.disconnect().await?;
-
-    Ok(())
+pub enum ConnectionState {
+    Connected(Context, SocketAddr),
+    Disconnected,
+    Error,
 }
+
+impl ConnectionState {
+    pub fn is_connected(&self) -> bool {
+        match self {
+            ConnectionState::Connected(_, _) => true,
+            _ => false,
+        }
+    }
+    
+    pub fn state_name(&self) -> &'static str {
+        match self {
+            ConnectionState::Connected(_, _) => "Connected",
+            ConnectionState::Disconnected => "Disconnected",
+            ConnectionState::Error => "Error",
+        }
+    }
+
+    pub async fn try_connect(&mut self, socket_addr: SocketAddr) -> Result<(), HmPiError> {
+        match tcp::connect(socket_addr).await {
+            Ok(ctx) => {
+                *self = ConnectionState::Connected(ctx, socket_addr);
+                Ok(())
+            }
+            Err(e) => {
+                *self = ConnectionState::Error;
+                Err(HmPiError::from(e))
+            }
+        }
+
+    }
+
+    pub async fn try_disconnect(&mut self) -> Result<(), HmPiError> {
+        match self {
+            ConnectionState::Connected(ctx, _) => {
+                ctx.disconnect().await?;
+                *self = ConnectionState::Disconnected;
+                Ok(())
+            }
+            ConnectionState::Disconnected => { Err(HmPiError::ModbusDisconnectedState) }
+            ConnectionState::Error => { Err(HmPiError::ModbusErrorState) }
+        }
+    }
+    
+    pub async fn reset(&mut self, socket_addr: SocketAddr) -> Result<(), HmPiError> {
+        match self {
+            ConnectionState::Connected(ctx, _) => {
+                match ctx.disconnect().await {
+                    Ok(_) => {},
+                    Err(e) => {
+                        warn!("Error disconnecting: {}\nIgnoring error and attempting to reconnect", e);
+                    }
+                }
+            }
+            _ => {}
+        }
+        self.try_connect(socket_addr).await
+    }
+}
+
+
