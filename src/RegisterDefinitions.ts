@@ -60,6 +60,7 @@ export const is_job_paused                      = ref(new CoilRegister(56, false
 export const is_temp_job_unsaved                = ref(new CoilRegister(57, false)); // R    Does the temp job have unsaved changes? (is temp job != saved job)
 export const is_reset_temp_job_latched          = ref(new CoilRegister(58, false)); // R    Latch for button that resets the temp job back to saved job values
 export const is_idle_state                      = ref(new CoilRegister(59, false)); // R    Is the machine in the idle state? Used for enabling certain button that only have an effect in idle
+export const is_homing                           = ref(new CoilRegister(60, false)); // R    Is the machine homing the carriage right now?
 
 export class HregRegister {
     addr: number;
@@ -150,8 +151,9 @@ export const message_register_range = ref(new HregRegisterRange(32, 32, [0]));
 
 
 
-export function read_coils(){
-    invoke('read_coils', {address: 0, count: 64}).then((res) => {
+export async function read_coils(): Promise<void> {
+    try {
+        const res = await invoke('read_coils', { address: 0, count: 64 });
         const coilArray = res as [boolean];
         is_mandrel_latch_closed.value.read_value(coilArray);
         is_fingers_down.value.read_value(coilArray);
@@ -191,11 +193,16 @@ export function read_coils(){
         is_temp_job_unsaved.value.read_value(coilArray);
         is_reset_temp_job_latched.value.read_value(coilArray);
         is_idle_state.value.read_value(coilArray);
-    })
+        is_homing.value.read_value(coilArray);
+    } catch (error) {
+        throw error; // Propagate the error up the chain
+    }
 }
 
-export function read_hregs() {
-    invoke('read_hregs', { address: 0, count: 64 }).then((res) => {
+
+export async function read_hregs(): Promise<void> {
+    try {
+        const res = await invoke('read_hregs', { address: 0, count: 64 });
         const hregArray = res as [number];
         actual_position.value.read_value(hregArray);
         cc_commanded_position.value.read_value(hregArray);
@@ -221,9 +228,9 @@ export function read_hregs() {
         for (let i = 0; i < message_register_range.value.length; i++) {
             message_register_range.value.values[i] = hregArray[message_register_range.value.addr_start + i] || 0;
         }
-    }).catch(err => {
-        console.error("Error reading hregs:", err);
-    });
+    } catch(error){
+        throw error;
+    }
 }
 
 
@@ -266,4 +273,5 @@ export function debug_print_coils(){
     debug("is_temp_job_unsaved: " + (is_temp_job_unsaved.value.value ? "true" : "false"));
     debug("is_reset_temp_job_latched: " + (is_reset_temp_job_latched.value.value ? "true" : "false"));
     debug("is_idle_state: " + (is_idle_state.value.value ? "true" : "false"));
+    debug("is_homing: " + (is_homing.value.value ? "true" : "false"));
 }
