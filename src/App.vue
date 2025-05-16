@@ -58,7 +58,6 @@ onMounted(async () => {
 
   setInterval(async () => {
     if (isProcessing){
-      warn("Skipping update because previous update is still running");
       return;
     }
 
@@ -101,6 +100,7 @@ function handleModeChange(mode: Mode) {
 
 <template>
   <Home
+      :is_connected="is_connected"
       :local_ip="local_ip_addr"
       :remote_sock_addr="connectedSocket"
       v-if="currentMode==Mode.Home"

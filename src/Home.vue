@@ -3,6 +3,7 @@ import { Mode } from './types.ts'
 import { invoke } from "@tauri-apps/api/core";
 import { ref, onMounted } from 'vue';
 import Button from "./Button.vue";
+import SpinnerLoader from "./LoadingSpinner.vue";
 
 
 const emit = defineEmits<{
@@ -12,6 +13,7 @@ const emit = defineEmits<{
 const props = defineProps<{
   local_ip: string,
   remote_sock_addr: string
+  is_connected: boolean,
 }>();
 
 async function modeChange(mode: Mode) {
@@ -30,20 +32,29 @@ async function modeChange(mode: Mode) {
       <h2 class="mx-auto mt-3 text-center text-4xl ">
         Select operating mode
       </h2>
-      <div class="mt-1 pb-2 mb-5 border-b-2">
-        <p class="mx-auto text-center text-sm">
+      <div v-if="!is_connected" class="mt-1 pb-2 mb-5 border-b-2 flex flex-col">
+        <SpinnerLoader
+            class="mx-auto m-2"
+            :loading="true" :size="32" color="#909090" />
+        <p class="mx-auto text-center text-m">
+          Connecting...
+        </p>
+      </div>
+
+      <div v-if="is_connected" class="mt-1 pb-2 mb-5 border-b-2 flex">
+        <p class="mx-auto text-center text-sm w-1/2">
           Local IP address: {{props.local_ip}}
         </p>
-        <p class="mx-auto text-center text-sm">
+        <p class="mx-auto text-center text-sm w-1/2">
           Remote socket address: {{props.remote_sock_addr}}
         </p>
       </div>
     </div>
 
     <div class="flex gap-4 mx-4">
-      <Button @click="modeChange(Mode.Execute)" text="Execute" class="flex-1/3 h-32 text-2xl"/>
-      <Button @click="modeChange(Mode.Manual)" text="Manual" class="flex-1/3 h-32 text-2xl"/>
-      <Button @click="modeChange(Mode.CameraPreview)" text="Camera" class="flex-1/3 h-32 text-2xl"/>
+      <Button :disabled="!is_connected" @clicked="modeChange(Mode.Execute)" text="Execute" class="flex-1/3 h-32 text-2xl"/>
+      <Button :disabled="!is_connected" @clicked="modeChange(Mode.Manual)" text="Manual" class="flex-1/3 h-32 text-2xl"/>
+      <Button :disabled="!is_connected" @clicked="modeChange(Mode.CameraPreview)" text="Camera" class="flex-1/3 h-32 text-2xl"/>
     </div>
   </main>
 </template>
