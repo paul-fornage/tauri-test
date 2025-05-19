@@ -19,6 +19,7 @@ mod tauri_mb_commands;
 
 pub const DEFAULT_SOCKET_ADDR: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 552);
 pub const STATE_MUTEX_TIMOUT: Duration = Duration::new(0, 100_000_000); // 100ms
+pub const MB_NET_OPS_TIMEOUT: Duration = Duration::new(0, 1_000_000_000); // 1s
 
 
 #[tauri::command]
@@ -119,6 +120,7 @@ async fn reset_connection(state: State<'_, Mutex<AppState>>) -> Result<(), Strin
     match tokio::time::timeout(STATE_MUTEX_TIMOUT, state.lock()).await {
         Ok(mut state_guard) => {
             let target_socket_address = state_guard.target_socket_address;
+            // TODO: timeout
             state_guard.connection_state.reset(target_socket_address).await.map_err(|e| e.to_string())
         },
         Err(_) => {
@@ -131,7 +133,9 @@ async fn reset_connection(state: State<'_, Mutex<AppState>>) -> Result<(), Strin
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .plugin(tauri_plugin_log::Builder::new().build())
+        .plugin(tauri_plugin_log::Builder::new()
+            .level_for("tokio_modbus::service::tcp", log::LevelFilter::Info)
+            .build())
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
             app.manage(Mutex::new(AppState{

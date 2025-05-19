@@ -17,7 +17,9 @@ pub enum HmPiError {
     #[error("Tried to connect to modbus device while already connected")]
     ModbusAlreadyConnected,
     #[error("Timed out waiting for lock on modbus connection context")]
-    ModbusLockTimeout
+    ModbusLockTimeout,
+    #[error("Timed out waiting for modbus operation to complete")]
+    ModbusOpTimeout,
 }
 
 impl HmPiError {
