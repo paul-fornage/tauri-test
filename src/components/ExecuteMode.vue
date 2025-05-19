@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Mode } from './types.ts'
+import { Mode } from '../types.ts'
 import ModeToolbar from "./ModeToolbar.vue";
 
 const emit = defineEmits<{

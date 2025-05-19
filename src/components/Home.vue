@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { Mode } from './types.ts'
+import { Mode } from '../types.ts'
 import { invoke } from "@tauri-apps/api/core";
 import { ref, onMounted } from 'vue';
-import Button from "./Button.vue";
+import {Button} from "@/components/ui/button";
 import SpinnerLoader from "./LoadingSpinner.vue";
+import DarkModeSwitch from "@/components/DarkModeSwitch.vue";
 
 
 const emit = defineEmits<{
@@ -21,10 +22,15 @@ async function modeChange(mode: Mode) {
   emit('modeChange', mode)
 }
 
+
+
 </script>
 
 <template>
   <main>
+    <div class="h-10 flex w-full justify-end p-2">
+      <DarkModeSwitch class="m-2"/>
+    </div>
     <div class="flex pt-10">
       <img src="/mitusa-logo.png" class="logo mitusa mx-auto p-3" alt="Mitusa logo" />
     </div>
@@ -52,14 +58,37 @@ async function modeChange(mode: Mode) {
     </div>
 
     <div class="flex gap-4 mx-4">
-      <Button :disabled="!is_connected" @clicked="modeChange(Mode.Execute)" text="Execute" class="flex-1/3 h-32 text-2xl"/>
-      <Button :disabled="!is_connected" @clicked="modeChange(Mode.Manual)" text="Manual" class="flex-1/3 h-32 text-2xl"/>
-      <Button :disabled="!is_connected" @clicked="modeChange(Mode.CameraPreview)" text="Camera" class="flex-1/3 h-32 text-2xl"/>
+      <Button
+          class="flex-1/3 h-32 text-4xl active:scale-95 active:bg-slate-700"
+          @click="modeChange(Mode.Execute)"
+          :disabled="!is_connected"
+          variant="default">
+        Execute
+      </Button>
+      <Button
+          class="flex-1/3 h-32 text-4xl active:scale-95 active:bg-slate-700"
+          @click="modeChange(Mode.Manual)"
+          :disabled="!is_connected"
+          variant="default">
+        Manual
+      </Button>
+      <Button
+          class="flex-1/3 h-32 text-4xl active:scale-95 active:bg-slate-700"
+          @click="modeChange(Mode.CameraPreview)"
+          :disabled="!is_connected"
+          variant="default">
+        Camera
+      </Button>
     </div>
   </main>
 </template>
 
 <style scoped>
+
+.logo.mitusa {
+  transition: filter 0.1s ease-in-out;
+}
+
 .logo.mitusa:hover {
   filter: drop-shadow(0 0 2em #747bff);
 }
@@ -67,7 +96,6 @@ async function modeChange(mode: Mode) {
 .logo.mitusa:hover {
   filter: drop-shadow(0 0 2em #249b73);
 }
-
 
 
 </style>

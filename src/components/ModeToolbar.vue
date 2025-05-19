@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import {House} from "lucide-vue-next";
-import * as Register from './RegisterDefinitions.ts';
+import * as Register from '../RegisterDefinitions.ts';
 import {computed} from "vue";
+import {Button} from "@/components/ui/button";
 
 defineProps<{
   headerText: string
@@ -25,7 +26,7 @@ const cycleTime = computed<string>(() => {
 
 <template>
   <div class="flex w-full border-b-2 h-20">
-    <p class="mr-auto p-6 text-xl">
+    <p class="mr-auto p-6 text-xl flex-1">
       {{ headerText }}
     </p>
     <div
@@ -35,15 +36,16 @@ const cycleTime = computed<string>(() => {
     </div>
     <p
         v-else
-        class="text-gray-500 text-l my-auto">
+        class="text-gray-500 flex-1 text-l my-auto">
       {{cycleTime}}
     </p>
-    <div @click="homeClicked" class="ml-auto m-2 py-4 px-8 border-2 rounded-lg flex gap-5 bg-zinc-200 cursor-pointer hover:bg-zinc-300 click:bg-zinc-400">
-      <House class="w-8 h-8"/>
-      <p class="my-auto">
+    <Button @click="homeClicked" class="ml-auto m-2 py-4 px-8 flex flex-row gap-5 h-16">
+      <House class="size-6"/>
+      <p class="my-auto text-xl">
         Home
       </p>
-    </div>
+    </Button>
+
   </div>
 </template>
 

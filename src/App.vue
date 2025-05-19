@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import Home from "./Home.vue";
-import ExecuteMode from "./ExecuteMode.vue";
-import ManualMode from "./ManualMode.vue";
-import CameraPreview from "./CameraPreview.vue";
-import {info,warn} from '@tauri-apps/plugin-log';
+import Home from "./components/Home.vue";
+import ExecuteMode from "./components/ExecuteMode.vue";
+import ManualMode from "./components/ManualMode.vue";
+import CameraPreview from "./components/CameraPreview.vue";
+import {info,warn,error} from '@tauri-apps/plugin-log';
 import {Actuator, Mode} from './types';
 import {onMounted, onUnmounted, ref} from 'vue';
 import {Event} from "@tauri-apps/api/event";
 import { invoke } from '@tauri-apps/api/core';
 import * as Register from './RegisterDefinitions.ts';
+
 
 // TODO: https://github.com/tauri-apps/plugins-workspace/tree/v2/plugins/autostart
 // TODO: https://v2.tauri.app/plugin/updater/
@@ -18,6 +19,11 @@ const local_ip_addr = ref<string>("Ip Address");
 const is_connected = ref<boolean>(false);
 
 const currentMode = ref<Mode>(Mode.Home);
+
+const last_heartbeat_time = ref<number>(0);
+
+
+
 
 async function check_connection() {
   try {
@@ -44,7 +50,29 @@ async function reset_connection() {
   } else {
     throw new Error("reset_connection succeeded, but check_connection failed. This should never happen.");
   }
+}
 
+async function heartbeat() {
+  const u16_time_now: number = Date.now()%65536;
+  const last_time: number = Register.heartbeat_out.value.value;
+
+  if(u16_time_now >= last_time){
+    last_heartbeat_time.value = u16_time_now-last_time;
+  } else {
+    // local u16 rolled over, so add 2^16 to get the right difference
+    last_heartbeat_time.value = u16_time_now + 65536 - last_time;
+  }
+
+  try{
+    await Register.heartbeat_in.value.write_value(u16_time_now)
+  } catch(err) {
+    throw err;
+  }
+
+
+  if(last_heartbeat_time.value > 500){
+    warn("Heartbeat took " + last_heartbeat_time.value + " ms");
+  }
 }
 
 onMounted(async () => {
@@ -66,15 +94,14 @@ onMounted(async () => {
       if(is_connected.value){
         try {
           await Register.read_coils();
+          await Register.read_hregs();
+          await heartbeat();
         } catch(err) {
-          warn("read_coils returns error variant: " + err);
+          warn("read modbus returns error variant: " + err);
           await check_connection();
         }
-        try {
-          await Register.read_hregs();
-        } catch(err) {
-          warn("read_hregs returns error variant: " + err);
-          await check_connection();
+        if (last_heartbeat_time.value > 1000){
+          is_connected.value = false;
         }
       } else {
         await reset_connection();
@@ -123,6 +150,7 @@ function handleModeChange(mode: Mode) {
   font-size: 16px;
   line-height: 24px;
   font-weight: 400;
+  overflow: hidden;
 
   color: #0f0f0f;
   background-color: #f6f6f6;

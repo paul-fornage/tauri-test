@@ -14,16 +14,25 @@
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-log": "~2",
     "@tauri-apps/plugin-opener": "^2",
+    "@vueuse/core": "^13.2.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "lucide-vue-next": "^0.488.0",
+    "reka-ui": "^2.2.1",
+    "tailwind-merge": "^3.3.0",
     "tailwindcss": "^4.1.5",
+    "tw-animate-css": "^1.3.0",
     "vue": "^3.5.13"
   },
   "devDependencies": {
+    "@iconify-json/radix-icons": "^1.2.2",
+    "@iconify/vue": "^5.0.0",
     "@tauri-apps/cli": "^2",
     "@types/node": "^22.15.18",
     "@vitejs/plugin-vue": "^5.2.1",
     "typescript": "~5.6.2",
     "vite": "^6.0.3",
     "vue-tsc": "^2.1.10"
-  }
+  },
+  "packageManager": "pnpm@10.11.0+sha512.6540583f41cc5f628eb3d9773ecee802f4f9ef9923cc45b69890fb47991d4b092964694ec3a4f738a420c918a333062c8b925d312f42e4f0c263eb603551f977"
 }
