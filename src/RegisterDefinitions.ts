@@ -1,6 +1,7 @@
 import { ref } from "vue";
 import { invoke } from '@tauri-apps/api/core';
 import {debug} from '@tauri-apps/plugin-log';
+import {inches_to_hundreths, hundreths_to_inches} from './utils.ts';
 
 export class CoilRegister {
     addr: number;
@@ -65,41 +66,58 @@ export const is_homing                           = ref(new CoilRegister(60, fals
 export class HregRegister {
     addr: number;
     value: number;
+    read_conversion: null | ((value: number) => number);
+    write_conversion: null | ((value: number) => number);
 
-    constructor(addr: number, value: number) {
+    constructor(
+        addr: number,
+        value: number,
+        read_conversion: ((value: number) => number) | null = null,
+        write_conversion: ((value: number) => number) | null = null
+    ) {
         this.addr = addr;
         this.value = value;
+        this.read_conversion = read_conversion;
+        this.write_conversion = write_conversion;
     }
 
+
     async write_value(value: number) {
-        await invoke('write_hreg', {address: this.addr, value: value})
+        if(this.write_conversion) {
+            value = this.write_conversion(value);
+        }
+        await invoke('write_hreg', {address: this.addr, value: Math.round(value)})
     }
 
     read_value(list: [number]) {
         if(list[this.addr] != undefined) {
-            this.value = list[this.addr];
+            if (this.read_conversion) {
+                this.value = this.read_conversion(list[this.addr]);
+            } else {
+                this.value = list[this.addr];
+            }
         }
     }
 }
 
-export const actual_position         = ref(new HregRegister(1 , 0));
-export const cc_commanded_position   = ref(new HregRegister(2 , 0));
-export const hmi_commanded_position  = ref(new HregRegister(3 , 0));
+export const actual_position         = ref(new HregRegister(1 , 0, hundreths_to_inches, inches_to_hundreths));
+export const cc_commanded_position   = ref(new HregRegister(2 , 0, hundreths_to_inches, inches_to_hundreths));
+export const hmi_commanded_position  = ref(new HregRegister(3 , 0, hundreths_to_inches, inches_to_hundreths));
 export const job_progress            = ref(new HregRegister(5 , 0));
-export const job_start_pos           = ref(new HregRegister(6 , 0));
-export const job_end_pos             = ref(new HregRegister(7 , 0));
-export const job_park_pos            = ref(new HregRegister(8 , 0));
-export const min_pos                 = ref(new HregRegister(9 , 0));
-export const max_pos                 = ref(new HregRegister(10, 0));
-export const jog_speed               = ref(new HregRegister(11, 0));
-export const planish_speed           = ref(new HregRegister(12, 0));
+export const job_start_pos           = ref(new HregRegister(6 , 0, hundreths_to_inches, inches_to_hundreths));
+export const job_end_pos             = ref(new HregRegister(7 , 0, hundreths_to_inches, inches_to_hundreths));
+export const job_park_pos            = ref(new HregRegister(8 , 0, hundreths_to_inches, inches_to_hundreths));
+export const min_pos                 = ref(new HregRegister(9 , 0, hundreths_to_inches, inches_to_hundreths));
+export const max_pos                 = ref(new HregRegister(10, 0, hundreths_to_inches, inches_to_hundreths));
+export const jog_speed               = ref(new HregRegister(11, 0, hundreths_to_inches, inches_to_hundreths));
+export const planish_speed           = ref(new HregRegister(12, 0, hundreths_to_inches, inches_to_hundreths));
 export const fault_code              = ref(new HregRegister(13, 0));
 export const heartbeat_in            = ref(new HregRegister(14, 0));
 export const heartbeat_out           = ref(new HregRegister(15, 0));
 export const current_state           = ref(new HregRegister(16, 0));
-export const hmi_job_start_pos       = ref(new HregRegister(17, 0));
-export const hmi_job_end_pos         = ref(new HregRegister(18, 0));
-export const hmi_job_park_pos        = ref(new HregRegister(19, 0));
+export const hmi_job_start_pos       = ref(new HregRegister(17, 0, hundreths_to_inches, inches_to_hundreths));
+export const hmi_job_end_pos         = ref(new HregRegister(18, 0, hundreths_to_inches, inches_to_hundreths));
+export const hmi_job_park_pos        = ref(new HregRegister(19, 0, hundreths_to_inches, inches_to_hundreths));
 export const cc_iteration_time       = ref(new HregRegister(20, 0));
 
 export class HregRegisterRange {

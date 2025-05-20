@@ -10,44 +10,76 @@ import {
 } from "@/components/ui/dialog";
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
-import {ref} from "vue";
+import {onMounted, onUnmounted, ref} from "vue";
 import {info} from "@tauri-apps/plugin-log";
 import {Card, CardContent} from "@/components/ui/card";
 import KeypadButton from "@/components/KeypadButton.vue";
 import {KeypadFunctionButton} from "@/types.ts";
+import LightCard from "@/components/LightCard.vue";
 
+
+const ENABLE_FLOAT: boolean = true;
 
 const props = defineProps<{
   text: string,
-  value: number,
+  initial_value: number,
   min: number,
   max: number,
 }>();
 
-const local_value = ref<string>(props.value.toString());
+const local_value = ref<string>("");
 const invalidInputFeedback = ref<string>("");
 
 const keyButtonValues = [
-    KeypadFunctionButton.one, KeypadFunctionButton.two, KeypadFunctionButton.three,
-    KeypadFunctionButton.four, KeypadFunctionButton.five, KeypadFunctionButton.six,
-    KeypadFunctionButton.seven, KeypadFunctionButton.eight, KeypadFunctionButton.nine,
-    KeypadFunctionButton.dot, KeypadFunctionButton.zero, KeypadFunctionButton.enter,
-    KeypadFunctionButton.delete, KeypadFunctionButton.clear, KeypadFunctionButton.blank,
+    KeypadFunctionButton.one,   KeypadFunctionButton.two,   KeypadFunctionButton.three, KeypadFunctionButton.delete,
+    KeypadFunctionButton.four,  KeypadFunctionButton.five,  KeypadFunctionButton.six,   KeypadFunctionButton.clear,
+    KeypadFunctionButton.seven, KeypadFunctionButton.eight, KeypadFunctionButton.nine,  KeypadFunctionButton.enter,
+    ENABLE_FLOAT ? KeypadFunctionButton.dot : KeypadFunctionButton.blank,   KeypadFunctionButton.zero,
 ]
+
+const emits = defineEmits<{
+  (e: 'submit', value: number): void;
+}>();
+
+const is_open = ref<boolean>(false);
 
 
 function submitHandler() {
-  info("submit speed handler");
-  if(parseFloat(local_value.value) < props.min){
+  if(inputCheck()){
+    const as_float: number = parseFloat(local_value.value);
+    emits("submit", as_float);
+    local_value.value = "";
+    is_open.value = false;
+  }
+}
+
+function inputCheck(): boolean {
+  const as_float: number = parseFloat(local_value.value);
+  if(!as_float){
+    invalidInputFeedback.value = "Invalid input";
+    return false;
+  }
+  if(as_float < props.min){
     local_value.value = props.min.toString();
     info("speed is less than min");
-    invalidInputFeedback.value = "Speed must be greater than "+props.min;
-  } else if(parseFloat(local_value.value) > props.max){
+    invalidInputFeedback.value = "Speed must be greater than "+props.min.toString();
+    return false;
+  }
+  if(as_float > props.max){
     local_value.value = props.max.toString();
     info("speed is greater than max");
-    invalidInputFeedback.value = "Speed must be less than "+props.max;
+    info("currently: "+as_float.toString());
+    invalidInputFeedback.value = "Speed must be less than "+props.max.toString();
+    return false;
+  }
+  if(!ENABLE_FLOAT && as_float.toString().includes(".")){
+    local_value.value = Math.round(as_float).toString();
+    info("speed has decimal");
+    invalidInputFeedback.value = "Speed must be an integer";
+    return false;
   }
   invalidInputFeedback.value = "";
+  return true;
 }
 
 function keyPress(key: KeypadFunctionButton){
@@ -75,7 +107,7 @@ function keyPress(key: KeypadFunctionButton){
       }
       break;
     case KeypadFunctionButton.dot:
-      if (!currentValue.includes(".")) {
+      if (!currentValue.includes(".") && ENABLE_FLOAT) {
         local_value.value += ".";
       }
       break;
@@ -85,14 +117,51 @@ function keyPress(key: KeypadFunctionButton){
     case KeypadFunctionButton.blank:
       break;
   }
+  inputCheck();
 }
+
+const keyMapping: Record<string, KeypadFunctionButton> = {
+  "0": KeypadFunctionButton.zero,
+  "1": KeypadFunctionButton.one,
+  "2": KeypadFunctionButton.two,
+  "3": KeypadFunctionButton.three,
+  "4": KeypadFunctionButton.four,
+  "5": KeypadFunctionButton.five,
+  "6": KeypadFunctionButton.six,
+  "7": KeypadFunctionButton.seven,
+  "8": KeypadFunctionButton.eight,
+  "9": KeypadFunctionButton.nine,
+  ".": KeypadFunctionButton.dot,
+  "Enter": KeypadFunctionButton.enter,
+  "Backspace": KeypadFunctionButton.delete,
+  "Escape": KeypadFunctionButton.clear
+};
+
+function handleKeyDown(event: KeyboardEvent) {
+  const key = keyMapping[event.key];
+  if (key !== undefined) {
+    keyPress(key);
+  }
+}
+
+// Register the listener on component mount
+onMounted(() => {
+  window.addEventListener("keydown", handleKeyDown);
+});
+
+// Clean up the listener on component unmount
+onUnmounted(() => {
+  window.removeEventListener("keydown", handleKeyDown);
+});
 
 </script>
 
 <template>
-  <Dialog class="">
+  <Dialog
+      v-model:open="is_open"
+      class="">
     <DialogTrigger as-child>
-      <Button class="mx-auto mt-2 text-2xl h-18" variant="default">
+      <Button class="mx-auto my-1 text-xl h-16 w-10/12" variant="default">
         {{ text }}
       </Button>
     </DialogTrigger>
@@ -107,31 +176,27 @@ function keyPress(key: KeypadFunctionButton){
             :disabled="true"
             v-model="local_value"
             class="text-3xl h-20"
-            :placeholder="text"
+            :placeholder="initial_value.toFixed(2)"
         />
         <p class="flex-1 text-nowrap my-auto mx-2 p-1">
           Inches per minute
         </p>
       </div>
-      <p class="text-nowrap mx-auto p-1 text-red-800">
+      <p class="text-nowrap mx-auto p-1 text-red-800 h-4">
         {{ invalidInputFeedback }}
       </p>
-      <Card class="py-3">
-        <CardContent class="grid grid-cols-3 gap-2">
-          <div
-              class="mx-auto justify-self-center"
-              v-for="keyButtonValue in keyButtonValues"
-              :key="keyButtonValue"
-          >
-            <KeypadButton
-                @pressed="keyPress"
-                :variant="keyButtonValue"
-            />
-          </div>
-
-        </CardContent>
-      </Card>
-
+      <LightCard class="grid grid-cols-4 gap-2">
+        <div
+            class="mx-auto justify-self-center"
+            v-for="keyButtonValue in keyButtonValues"
+            :key="keyButtonValue"
+        >
+          <KeypadButton
+              @pressed="keyPress"
+              :variant="keyButtonValue"
+          />
+        </div>
+      </LightCard>
       <DialogFooter class="">
         <DialogClose as-child class="flex-1 h-12 text-3xl">
           <Button type="button" variant="destructive">

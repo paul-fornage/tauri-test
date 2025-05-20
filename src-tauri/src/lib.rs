@@ -120,8 +120,10 @@ async fn reset_connection(state: State<'_, Mutex<AppState>>) -> Result<(), Strin
     match tokio::time::timeout(STATE_MUTEX_TIMOUT, state.lock()).await {
         Ok(mut state_guard) => {
             let target_socket_address = state_guard.target_socket_address;
-            // TODO: timeout
-            state_guard.connection_state.reset(target_socket_address).await.map_err(|e| e.to_string())
+            let fut = state_guard.connection_state.reset(target_socket_address);
+            tokio::time::timeout(MB_NET_OPS_TIMEOUT, fut).await
+                .map_err(|_| "Timed out trying to connect".to_string())?
+                .map_err(|e| e.to_string())
         },
         Err(_) => {
             warn!("Timeout while getting app state");

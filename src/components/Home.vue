@@ -5,6 +5,7 @@ import { ref, onMounted } from 'vue';
 import {Button} from "@/components/ui/button";
 import SpinnerLoader from "./LoadingSpinner.vue";
 import DarkModeSwitch from "@/components/DarkModeSwitch.vue";
+import ModeToolbar from "@/components/ModeToolbar.vue";
 
 
 const emit = defineEmits<{
@@ -28,10 +29,15 @@ async function modeChange(mode: Mode) {
 
 <template>
   <main>
+    <ModeToolbar
+        header-text="Home"
+        :is-home="true"
+        @homeClicked="() => {}"
+    />
     <div class="h-10 flex w-full justify-end p-2">
       <DarkModeSwitch class="m-2"/>
     </div>
-    <div class="flex pt-10">
+    <div class="flex pt-2">
       <img src="/mitusa-logo.png" class="logo mitusa mx-auto p-3" alt="Mitusa logo" />
     </div>
     <div class="">

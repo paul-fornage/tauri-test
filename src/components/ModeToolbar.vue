@@ -3,9 +3,11 @@ import {House} from "lucide-vue-next";
 import * as Register from '../RegisterDefinitions.ts';
 import {computed} from "vue";
 import {Button} from "@/components/ui/button";
+import LightCard from "@/components/LightCard.vue";
 
 defineProps<{
-  headerText: string
+  headerText: string;
+  isHome?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -26,20 +28,23 @@ const cycleTime = computed<string>(() => {
 
 <template>
   <div class="flex w-full border-b-2 h-20">
-    <p class="mr-auto p-6 text-xl flex-1">
+    <p class="p-6 text-xl">
       {{ headerText }}
     </p>
-    <div
+    <LightCard
         v-if="Register.show_message.value.value"
-        class="bg-gray-300 border-2 border-gray-900 rounded-xl h-min my-auto m-1 p-1 text-center">
+        class="h-min m-auto py-1 px-4 text-center flex-max border-orange-500 border-2">
       {{Register.message_register_range.value.as_text()}}
-    </div>
+    </LightCard>
     <p
         v-else
-        class="text-gray-500 flex-1 text-l my-auto">
+        class="text-gray-500 text-l flex-max m-auto text-center">
       {{cycleTime}}
     </p>
-    <Button @click="homeClicked" class="ml-auto m-2 py-4 px-8 flex flex-row gap-5 h-16">
+    <Button
+        v-if="!isHome"
+        @click="homeClicked"
+        class="m-2 py-4 px-8 flex flex-row gap-5 h-16">
       <House class="size-6"/>
       <p class="my-auto text-xl">
         Home

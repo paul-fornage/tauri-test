@@ -104,6 +104,9 @@ onMounted(async () => {
           is_connected.value = false;
         }
       } else {
+        if(currentMode.value !== Mode.Home){
+          currentMode.value = Mode.Home;
+        }
         await reset_connection();
       }
     } catch (err) {
@@ -119,8 +122,15 @@ onMounted(async () => {
 })
 
 function handleModeChange(mode: Mode) {
-  currentMode.value = mode;
-  info(`Switched to ${mode} mode`);
+  if(is_connected.value) {
+    currentMode.value = mode;
+    info(`Switched to ${mode} mode`);
+  } else {
+    currentMode.value = Mode.Home;
+    info("can't switch modes while not connected. Please connect first.");
+  }
+
+
 }
 
 </script>

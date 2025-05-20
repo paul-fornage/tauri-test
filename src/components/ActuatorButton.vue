@@ -2,13 +2,17 @@
 import {
   debug,
 } from '@tauri-apps/plugin-log';
-import {Actuator} from "../types.ts";
 import {computed, ComputedRef} from "vue";
+import {Button} from "@/components/ui/button";
 
 const props = defineProps<{
   actuatorName: string,
   actuatorCommanded: boolean,
   actuatorSensed: boolean,
+  true_text?: string,
+  false_text?: string,
+  rising_text?: string,
+  falling_text?: string,
 }>();
 
 const emit = defineEmits<{
@@ -21,30 +25,23 @@ async function clickHandler() {
 
 function getActuatorButtonClass(): string {
   if (props.actuatorSensed && props.actuatorCommanded) {
-    return "border-green-900 text-green-900";
+    return "border-green-600 text-green-600 dark:text-green-800";
   }
   if (!props.actuatorSensed && !props.actuatorCommanded) {
-    return "border-red-800 text-red-900";
+    return "border-red-500 text-red-600 dark:text-red-800";
   }
-  if (props.actuatorCommanded) {
-    return "border-green-600 text-green-900";
-  }
-  if (!props.actuatorCommanded) {
-    return "border-red-500 text-red-900"
-  }
-  return "border-gray-400 text-gray-900";
+  return "border-gay-600 text-gray-400";
 }
 
 const subtext: ComputedRef<string> = computed(() => {
-  debug("get_subtext: " + props.actuatorName)
   if (props.actuatorSensed && props.actuatorCommanded) {
-    return "Engaged";
+    return props.true_text ?? "Engaged";
   } else if (!props.actuatorSensed && !props.actuatorCommanded) {
-    return "Disengaged";
+    return props.false_text ?? "Disengaged";
   } else if (!props.actuatorSensed && props.actuatorCommanded) {
-    return "Engaging...";
+    return props.rising_text ?? "Engaging...";
   } else if (props.actuatorSensed && !props.actuatorCommanded) {
-    return "Disengaging...";
+    return props.falling_text ?? "Disengaging...";
   } else {
     return "Unknown";
   }
@@ -53,8 +50,8 @@ const subtext: ComputedRef<string> = computed(() => {
 </script>
 
 <template>
-  <div @click="clickHandler"
-       :class="['my-2 py-4 px-8 border-4 rounded-lg flex gap-5 bg-zinc-200 cursor-pointer hover:bg-zinc-300 click:bg-zinc-400',
+  <Button @click="clickHandler"
+       :class="['my-2 py-6 px-8 border-4 rounded-lg flex gap-5 text-xl',
                 getActuatorButtonClass()]">
     <p class="text-left mr-auto">
       {{ actuatorName }}
@@ -64,7 +61,7 @@ const subtext: ComputedRef<string> = computed(() => {
         {{ subtext }}
       </p>
     </div>
-  </div>
+  </Button>
 </template>
 
 <style scoped>

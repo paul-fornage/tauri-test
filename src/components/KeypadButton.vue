@@ -54,7 +54,7 @@ const emits = defineEmits<{
 </script>
 
 <template>
-  <Button class="h-16 w-56 mx-auto text-2xl"
+  <Button class="h-16 w-36 mx-auto text-2xl"
       @click="emits('pressed', props.variant)">
     {{text}}
   </Button>

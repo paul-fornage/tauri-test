@@ -6,6 +6,10 @@ export enum Mode {
     CameraPreview,
 }
 
+export enum JogDirection {
+    POSITIVE = "pos",
+    NEGATIVE = "neg",
+}
 
 export interface Actuator {
     commanded: boolean | undefined;

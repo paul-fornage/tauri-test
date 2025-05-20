@@ -1,26 +1,17 @@
 <script setup lang="ts">
-import {ref} from 'vue';
-import {Actuator, Mode} from '../types.ts'
+import {ref, computed} from 'vue';
+import {JogDirection, Mode} from '../types.ts'
 import ModeToolbar from "./ModeToolbar.vue";
 import {Button} from "@/components/ui/button";
 import ActuatorButton from "./ActuatorButton.vue";
 import {info} from "@tauri-apps/plugin-log";
 import * as Register from '../RegisterDefinitions.ts';
 import ManualJog from "@/components/ManualJog.vue";
-import {Popover, PopoverTrigger, PopoverContent} from "@/components/ui/popover";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
-import {Card, CardContent} from "@/components/ui/card";
+import {Dialog, DialogClose, DialogContent, DialogFooter, DialogTrigger,} from '@/components/ui/dialog'
 import BooleanStatus from "@/components/BooleanStatus.vue";
 import SpeedSelect from "@/components/SpeedSelect.vue";
+import LightCard from "@/components/LightCard.vue";
+import JogButton from "@/components/JogButton.vue";
 
 const emit = defineEmits<{
   (e: 'modeChange', mode: Mode): void
@@ -62,7 +53,30 @@ function toggleRoller() {
   }
 }
 
+function submitJogSpeedHandler(new_val: number) {
+  info("submit jog speed handler: " + new_val.toString());
+  Register.jog_speed.value.write_value(new_val);
+}
 
+function submitPlanishSpeedHandler(new_val: number) {
+  info("submit planish speed handler: " + new_val.toString());
+  Register.planish_speed.value.write_value(new_val);
+}
+
+function manualJogAbsoluteButtonHandler() {
+  info("manual jog absolute button handler: " + commanded_axis_position.value.toString());
+  Register.hmi_commanded_position.value.write_value(commanded_axis_position.value);
+  Register.is_commanded_pos_latched.value.write_value(true);
+}
+
+function openManualJogPrep() {
+  // set the initial value to the current pos
+  commanded_axis_position.value = Register.cc_commanded_position.value.value;
+}
+
+function homeAxisHandler() {
+  Register.is_axis_homing_button_latched.value.write_value(true);
+}
 
 </script>
 
@@ -74,33 +88,88 @@ function toggleRoller() {
 
   <div class="flex border-b-2 p-4 select-none">
     <div class="flex flex-col flex-1/4 mx-2">
-      <BooleanStatus
-          class="h-12 my-2"
-          :state="Register.is_homed.value.value"
-          true_text="Axis is homed"
-          false_text="Axis not homed"/>
-      <Button class="h-16 my-2 text-xl">
-        {{ Register.is_homed.value.value ? 'Re-home axis' : 'Home carriage axis'}}
-      </Button>
-      <SpeedSelect
-          text="Set jog speed"
-          :value="1.2"
-          :min="1"
-          :max="100"
-      />
+
+      <LightCard class="border-2 border-slate-600 mb-1">
+        <div class="flex-rox flex text-xl">
+          <p class="flex-max mr-auto ml-4">
+            Current jog speed:
+          </p>
+          <p class="ml-auto mr-2 flex-1 text-right text-slate-800 dark:text-slate-200 text-2xl font-bold">
+            {{Register.jog_speed.value.value.toFixed(2)}}
+          </p>
+          <p class="mr-4 text-right">
+            in/min
+          </p>
+        </div>
+
+        <SpeedSelect
+            text="Set new jog speed"
+            :initial_value="Register.jog_speed.value.value"
+            :min="1"
+            :max="96"
+            @submit="submitJogSpeedHandler"
+        />
+      </LightCard>
+      <LightCard class="border-2 border-slate-600 my-1">
+        <div class="flex-rox flex text-xl">
+          <p class="flex-max mr-auto ml-4 ">
+            Current planish speed:
+          </p>
+          <p class="ml-auto mr-2 flex-1 text-right text-slate-800 dark:text-slate-200 text-2xl font-bold">
+            {{Register.planish_speed.value.value.toFixed(2)}}
+          </p>
+          <p class="mr-4 text-right">
+            in/min
+          </p>
+        </div>
+        <SpeedSelect
+            text="Set new planish speed"
+            :initial_value="Register.planish_speed.value.value"
+            :min="1"
+            :max="48"
+            @submit="submitPlanishSpeedHandler"
+        />
+      </LightCard>
+
     </div>
 
-    <div class="flex flex-col flex-1/4 mx-2">
-      <Button> Set job start to current position </Button>
-      <Button> Set job end to current position </Button>
-      <Button> Set job park to current position </Button>
+    <div class="flex flex-col flex-1/4 mx-2 gap-2">
+      <LightCard class="border-2 border-slate-600">
+        <div class="flex flex-row"
+            v-if="Register.is_homed.value.value">
+          <p class="flex-1 ml-3 mr-auto text-xl my-auto justify-center">
+            Current position:
+          </p>
+          <p class="flex-1 ml-auto text-right text-2xl font-bold my-auto justify-center">
+            {{Register.cc_commanded_position.value.value.toFixed(2)}}
+          </p>
+          <p class="mr-3 ml-1 text-xl my-auto justify-center">
+            inches
+          </p>
+        </div>
+        <div v-else>
+          <h1 class="text-slate-400 text-xl text-center">
+            Home axis to see position
+          </h1>
+        </div>
+      </LightCard>
     </div>
     <div class="flex flex-col flex-1/4 mx-2">
       <BooleanStatus
-          class="h-12 my-2"
+          class="h-12 mb-2"
           :state="Register.is_mandrel_latch_closed.value.value"
           true_text="Mandrel latch closed and secured"
           false_text="Mandrel latch not secured"
+      />
+      <ActuatorButton
+          actuatorName="Carriage axis"
+          @clicked="homeAxisHandler()"
+          :actuatorSensed="Register.is_homed.value.value"
+          :actuatorCommanded="Register.is_homing.value.value || Register.is_homed.value.value"
+          true_text="Homed"
+          false_text="Not homed"
+          rising_text="Homing..."
+          falling_text="Something has gone wrong"
       />
       <ActuatorButton
           actuatorName="Fingers"
@@ -116,10 +185,16 @@ function toggleRoller() {
       />
     </div>
   </div>
-  <div class="w-full flex">
-    <Dialog class="">
+  <div class="w-full flex mt-2">
+    <JogButton
+        class="mx-auto h-16 w-64 text-2xl"
+        :direction="JogDirection.NEGATIVE" />
+<!--    TODO: Short presses dont get released!!  -->
+    <Dialog class="flex-1">
       <DialogTrigger as-child>
-        <Button class="mx-auto mt-2 text-2xl h-18" variant="default">
+        <Button
+            @click="openManualJogPrep"
+            class="mx-auto text-2xl h-16 w-64" variant="default">
           Go to position...
         </Button>
       </DialogTrigger>
@@ -130,74 +205,26 @@ function toggleRoller() {
             :max-commanded-position="maxCommandedPosition" />
         <DialogFooter class="">
           <DialogClose as-child class="flex-1 h-20 text-3xl">
-            <Button type="button" variant="destructive">
+            <Button type="button" class="bg-red-900 active:bg-red-700 dark:bg-red-500">
               Close
             </Button>
           </DialogClose>
-          <Button class="flex-1 h-20 text-3xl bg-green-900 hover:bg-green-800 active:bg-green-700">
+          <Button
+              @click="manualJogAbsoluteButtonHandler"
+              class="flex-1 h-20 text-3xl bg-green-900 active:bg-green-700 dark:bg-green-500">
             Go
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
+    <JogButton
+        class="mx-auto h-16 w-64 text-2xl"
+        :direction="JogDirection.POSITIVE" />
   </div>
 </template>
 
 <style scoped>
-
-.nowrap{
-  text-wrap: nowrap;
-}
-
-
 .debug{
   border: red 2px solid;
 }
-
-
-
-.axis-slider {
-  -webkit-appearance: none;  /* Override default CSS styles */
-  appearance: none;
-  width: 90vw;
-  margin: auto auto;
-  justify-self: center;
-  height: 25px; /* Specified height */
-  background: #d3d3d3; /* Grey background */
-  border-radius: 1rem;
-  outline: none; /* Remove outline */
-  opacity: 0.7; /* Set transparency (for mouse-over effects on hover) */
-  -webkit-transition: .2s; /* 0.2 seconds transition on hover */
-  transition: opacity .2s;
-}
-
-/* Mouse-over effects */
-.axis-slider:hover {
-  opacity: 1; /* Fully shown on mouse-over */
-}
-
-.axis-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 4rem;
-  height: 4rem;
-  border-radius: 50%;
-  background: #04AA6D;
-  cursor: pointer;
-}
-
-.axis-slider::-moz-range-thumb {
-  width: 4rem;
-  height: 4rem;
-  border-radius: 50%;
-  background: #04AA6D;
-  cursor: pointer;
-}
-
-.axis-step{
-  display: flex;
-  flex-direction: row;
-}
-
-
 </style>
