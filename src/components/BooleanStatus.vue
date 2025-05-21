@@ -25,8 +25,11 @@ const text = computed(() => {
 </script>
 
 <template>
-  <LightCard :class="['p-1 border-2 text-center', stateClass]">
-    {{text}}
+  <LightCard :class="['border-2', stateClass]">
+    <p class="text-center text-xl">
+      {{text}}
+    </p>
+
   </LightCard>
 </template>
 

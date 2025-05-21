@@ -18,7 +18,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const disabledClass = computed<string>(() => {
   if (props.disabled) {
-    return "border-gray-300 hover:cursor-not-allowed text-gray-400"
+    return "border-slate-200 hover:cursor-not-allowed text-slate-400 bg-slate-300"
   } else {
     return ""
   }
@@ -31,7 +31,7 @@ const disabledClass = computed<string>(() => {
     data-slot="button"
     :as="as"
     :as-child="asChild"
-    :class="[cn(buttonVariants({ variant, size }), props.class), disabledClass, 'active:scale-95']"
+    :class="cn(buttonVariants({ variant, size }), props.class, disabledClass, 'active:scale-95')"
   >
     <slot />
   </Primitive>

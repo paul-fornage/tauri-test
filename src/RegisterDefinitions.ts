@@ -3,6 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 import {debug} from '@tauri-apps/plugin-log';
 import {inches_to_hundreths, hundreths_to_inches} from './utils.ts';
 
+
 export class CoilRegister {
     addr: number;
     value: boolean;
@@ -18,7 +19,10 @@ export class CoilRegister {
 
     read_value(list: [boolean]) {
         if(list[this.addr] != undefined) {
-            this.value = list[this.addr];
+            const new_value = list[this.addr];
+            if (new_value != this.value) { // avoid triggering unnecessary updates
+                this.value = list[this.addr];
+            }
         }
     }
 }
@@ -91,10 +95,14 @@ export class HregRegister {
 
     read_value(list: [number]) {
         if(list[this.addr] != undefined) {
+            let new_val: number;
             if (this.read_conversion) {
-                this.value = this.read_conversion(list[this.addr]);
+                new_val = this.read_conversion(list[this.addr]);
             } else {
-                this.value = list[this.addr];
+                new_val = list[this.addr];
+            }
+            if (new_val !== this.value) { // avoid triggering unnecessary updates
+                this.value = new_val;
             }
         }
     }

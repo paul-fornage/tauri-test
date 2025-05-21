@@ -24,7 +24,7 @@ async function homeClicked() {
   emit("modeChange", Mode.Home)
 }
 
-
+// TODO: half speed jog? maybe?
 
 
 function toggleFingers() {
@@ -142,7 +142,7 @@ function manualJogAbsoluteSubmitHandler(position: number) {
     </div>
     <div class="flex flex-col flex-1/4 mx-2">
       <BooleanStatus
-          class="h-12 mb-2"
+          class="mb-2"
           :state="Register.is_mandrel_latch_closed.value.value"
           true_text="Mandrel latch closed and secured"
           false_text="Mandrel latch not secured"
@@ -171,7 +171,7 @@ function manualJogAbsoluteSubmitHandler(position: number) {
       />
     </div>
   </div>
-  <div class="w-full flex mt-2">
+  <div class="w-full flex mt-4">
     <JogButton
         class="mx-auto h-16 w-64 text-2xl"
         :direction="JogDirection.NEGATIVE" />

@@ -7,6 +7,19 @@ export enum Mode {
     Learn,
 }
 
+export enum JobStatus {
+    NotReady,
+    Ready,
+    Paused,
+    Running,
+}
+
+export interface JobStatusMessage {
+    text: string,
+    job_status: JobStatus,
+}
+
+
 export enum PositionType {
     Start = "start",
     End = "end",
