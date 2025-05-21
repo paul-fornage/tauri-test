@@ -25,6 +25,7 @@ const props = defineProps<{
   initial_value: number,
   min: number,
   max: number,
+  class?: string,
 }>();
 
 const local_value = ref<string>("");
@@ -161,7 +162,7 @@ onUnmounted(() => {
       v-model:open="is_open"
       class="">
     <DialogTrigger as-child>
-      <Button class="mx-auto my-1 text-xl h-16 w-10/12" variant="default">
+      <Button :class="props.class ?? 'mx-auto my-1 text-xl h-16 w-10/12'" variant="default">
         {{ text }}
       </Button>
     </DialogTrigger>

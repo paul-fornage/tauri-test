@@ -27,12 +27,12 @@ const colorClass = computed<string>(() => {
 </script>
 
 <template>
-  <div :class="cn('text-center text-lg font-bold m-auto border-2 px-4 py-1 rounded-lg flex', colorClass)">
-    <Check class="m-2" v-if="status.job_status == JobStatus.Ready"/>
+  <div :class="cn('text-center text-lg font-bold m-auto border-2 px-8 py-2 rounded-lg flex gap-4', colorClass)">
+    <Check class="m-auto size-6" v-if="status.job_status == JobStatus.Ready"/>
     <TriangleAlert class="m-2" v-if="status.job_status == JobStatus.NotReady"/>
     <Pause class="m-2" v-if="status.job_status == JobStatus.Paused"/>
     <Play class="m-2" v-if="status.job_status == JobStatus.Running"/>
-    <p class="m-2">
+    <p class="">
       {{ status.text }}
     </p>
   </div>

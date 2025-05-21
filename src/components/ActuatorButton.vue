@@ -51,7 +51,7 @@ const subtext: ComputedRef<string> = computed(() => {
 
 <template>
   <Button @click="clickHandler"
-       :class="['my-2 py-6 px-8 border-4 rounded-lg flex gap-5 text-xl',
+       :class="['my-1 py-6 px-8 border-4 rounded-lg flex gap-5 text-xl',
                 getActuatorButtonClass()]">
     <p class="text-left mr-auto">
       {{ actuatorName }}

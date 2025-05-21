@@ -47,21 +47,7 @@ function toggleRoller() {
   }
 }
 
-function submitJogSpeedHandler(new_val: number) {
-  info("submit jog speed handler: " + new_val.toString());
-  Register.jog_speed.value.write_value(new_val);
-}
 
-function submitPlanishSpeedHandler(new_val: number) {
-  info("submit planish speed handler: " + new_val.toString());
-  Register.planish_speed.value.write_value(new_val);
-}
-
-
-
-function homeAxisHandler() {
-  Register.is_axis_homing_button_latched.value.write_value(true);
-}
 
 function manualJogAbsoluteSubmitHandler(position: number) {
   info("manual jog absolute button handler: " + position.toString());
@@ -98,7 +84,7 @@ function manualJogAbsoluteSubmitHandler(position: number) {
             :initial_value="Register.jog_speed.value.value"
             :min="1"
             :max="96"
-            @submit="submitJogSpeedHandler"
+            @submit="Register.jog_speed.value.write_value"
         />
       </LightCard>
       <LightCard class="border-2 border-slate-600 my-1">
@@ -118,7 +104,7 @@ function manualJogAbsoluteSubmitHandler(position: number) {
             :initial_value="Register.planish_speed.value.value"
             :min="1"
             :max="48"
-            @submit="submitPlanishSpeedHandler"
+            @submit="Register.planish_speed.value.write_value"
         />
       </LightCard>
 
@@ -149,7 +135,7 @@ function manualJogAbsoluteSubmitHandler(position: number) {
       />
       <ActuatorButton
           actuatorName="Carriage axis"
-          @clicked="homeAxisHandler()"
+          @clicked="Register.is_axis_homing_button_latched.value.write_value(true)"
           :actuatorSensed="Register.is_homed.value.value"
           :actuatorCommanded="Register.is_homing.value.value || Register.is_homed.value.value"
           true_text="Homed"
