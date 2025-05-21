@@ -4,6 +4,13 @@ export enum Mode {
     Manual,
     Home,
     CameraPreview,
+    Learn,
+}
+
+export enum PositionType {
+    Start = "start",
+    End = "end",
+    Park = "park"
 }
 
 export enum JogDirection {

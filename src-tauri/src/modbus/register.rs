@@ -1,15 +1,14 @@
-
-enum Register{
+enum Register {
     Hreg(Hreg),
     Coil(Coil),
 }
 
-struct Hreg{
+struct Hreg {
     name: String,
     value: u16,
 }
 
-struct Coil{
+struct Coil {
     name: String,
     value: bool,
 }

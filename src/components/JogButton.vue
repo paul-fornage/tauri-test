@@ -32,7 +32,7 @@ function startAction() {
 
 // Stop the action
 function stopAction() {
-  info(JogDirection.NEGATIVE + " Jog button released");
+  info(props.direction + " Jog button released");
 
   Register.is_jog_pos_pressed.value.write_value(false);
   Register.is_jog_neg_pressed.value.write_value(false);

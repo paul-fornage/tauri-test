@@ -80,6 +80,13 @@ async function modeChange(mode: Mode) {
       </Button>
       <Button
           class="flex-1/3 h-32 text-4xl active:scale-95 active:bg-slate-700"
+          @click="modeChange(Mode.Learn)"
+          :disabled="!is_connected"
+          variant="default">
+        Record job
+      </Button>
+      <Button
+          class="flex-1/3 h-32 text-4xl active:scale-95 active:bg-slate-700"
           @click="modeChange(Mode.CameraPreview)"
           :disabled="!is_connected"
           variant="default">

@@ -1,5 +1,5 @@
-use std::net::{SocketAddr};
 use crate::modbus::ConnectionState;
+use std::net::SocketAddr;
 
 pub struct AppState {
     pub(crate) connection_state: ConnectionState,

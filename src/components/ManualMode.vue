@@ -6,12 +6,14 @@ import {Button} from "@/components/ui/button";
 import ActuatorButton from "./ActuatorButton.vue";
 import {info} from "@tauri-apps/plugin-log";
 import * as Register from '../RegisterDefinitions.ts';
-import ManualJog from "@/components/ManualJog.vue";
+import PositionSelect from "@/components/PositionSelect.vue";
 import {Dialog, DialogClose, DialogContent, DialogFooter, DialogTrigger,} from '@/components/ui/dialog'
 import BooleanStatus from "@/components/BooleanStatus.vue";
 import SpeedSelect from "@/components/SpeedSelect.vue";
 import LightCard from "@/components/LightCard.vue";
 import JogButton from "@/components/JogButton.vue";
+import PositionDisplay from "@/components/PositionDisplay.vue";
+import {MAX_AXIS_POS, MIN_AXIS_POS} from "@/constants.ts"
 
 const emit = defineEmits<{
   (e: 'modeChange', mode: Mode): void
@@ -21,14 +23,6 @@ async function homeClicked() {
   console.log("change to home")
   emit("modeChange", Mode.Home)
 }
-
-const maxCommandedPosition = 47;
-const minCommandedPosition = 0;
-
-const commanded_axis_position = ref<number>(0);
-
-
-
 
 
 
@@ -63,19 +57,16 @@ function submitPlanishSpeedHandler(new_val: number) {
   Register.planish_speed.value.write_value(new_val);
 }
 
-function manualJogAbsoluteButtonHandler() {
-  info("manual jog absolute button handler: " + commanded_axis_position.value.toString());
-  Register.hmi_commanded_position.value.write_value(commanded_axis_position.value);
-  Register.is_commanded_pos_latched.value.write_value(true);
-}
 
-function openManualJogPrep() {
-  // set the initial value to the current pos
-  commanded_axis_position.value = Register.cc_commanded_position.value.value;
-}
 
 function homeAxisHandler() {
   Register.is_axis_homing_button_latched.value.write_value(true);
+}
+
+function manualJogAbsoluteSubmitHandler(position: number) {
+  info("manual jog absolute button handler: " + position.toString());
+  Register.hmi_commanded_position.value.write_value(position);
+  Register.is_commanded_pos_latched.value.write_value(true);
 }
 
 </script>
@@ -135,18 +126,13 @@ function homeAxisHandler() {
 
     <div class="flex flex-col flex-1/4 mx-2 gap-2">
       <LightCard class="border-2 border-slate-600">
-        <div class="flex flex-row"
-            v-if="Register.is_homed.value.value">
-          <p class="flex-1 ml-3 mr-auto text-xl my-auto justify-center">
-            Current position:
+        <PositionDisplay
+            v-if="Register.is_homed.value.value"
+            :position-to-display="Register.cc_commanded_position.value.value" >
+          <p>
+            Current position
           </p>
-          <p class="flex-1 ml-auto text-right text-2xl font-bold my-auto justify-center">
-            {{Register.cc_commanded_position.value.value.toFixed(2)}}
-          </p>
-          <p class="mr-3 ml-1 text-xl my-auto justify-center">
-            inches
-          </p>
-        </div>
+        </PositionDisplay>
         <div v-else>
           <h1 class="text-slate-400 text-xl text-center">
             Home axis to see position
@@ -189,34 +175,14 @@ function homeAxisHandler() {
     <JogButton
         class="mx-auto h-16 w-64 text-2xl"
         :direction="JogDirection.NEGATIVE" />
-<!--    TODO: Short presses dont get released!!  -->
-    <Dialog class="flex-1">
-      <DialogTrigger as-child>
-        <Button
-            @click="openManualJogPrep"
-            class="mx-auto text-2xl h-16 w-64" variant="default">
-          Go to position...
-        </Button>
-      </DialogTrigger>
-      <DialogContent class="">
-        <ManualJog
-            v-model="commanded_axis_position"
-            :min-commanded-position="minCommandedPosition"
-            :max-commanded-position="maxCommandedPosition" />
-        <DialogFooter class="">
-          <DialogClose as-child class="flex-1 h-20 text-3xl">
-            <Button type="button" class="bg-red-900 active:bg-red-700 dark:bg-red-500">
-              Close
-            </Button>
-          </DialogClose>
-          <Button
-              @click="manualJogAbsoluteButtonHandler"
-              class="flex-1 h-20 text-3xl bg-green-900 active:bg-green-700 dark:bg-green-500">
-            Go
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <PositionSelect
+        @submitNewPosition="manualJogAbsoluteSubmitHandler"
+        :current-position="Register.cc_commanded_position.value.value"
+        :min-commanded-position="MIN_AXIS_POS"
+        :is-homed="Register.is_homed.value.value"
+        :max-commanded-position="MAX_AXIS_POS" >
+      Jog to absolute position
+    </PositionSelect>
     <JogButton
         class="mx-auto h-16 w-64 text-2xl"
         :direction="JogDirection.POSITIVE" />

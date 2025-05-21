@@ -9,6 +9,7 @@ import {onMounted, onUnmounted, ref} from 'vue';
 import {Event} from "@tauri-apps/api/event";
 import { invoke } from '@tauri-apps/api/core';
 import * as Register from './RegisterDefinitions.ts';
+import LearnMode from "@/components/LearnMode.vue";
 
 
 // TODO: https://github.com/tauri-apps/plugins-workspace/tree/v2/plugins/autostart
@@ -43,6 +44,7 @@ async function reset_connection() {
     await invoke("reset_connection");
   } catch (err) {
     warn("reset_connection returns error variant: " + err);
+    return;
   }
   if(await check_connection()){
     connectedSocket.value = await invoke("get_connected_socket_addr");
@@ -148,6 +150,9 @@ function handleModeChange(mode: Mode) {
   <ManualMode
       v-if="currentMode==Mode.Manual"
       @mode-change="handleModeChange"></ManualMode>
+  <LearnMode
+      v-if="currentMode==Mode.Learn"
+      @mode-change="handleModeChange"></LearnMode>
   <CameraPreview
       v-if="currentMode==Mode.CameraPreview"
       @mode-change="handleModeChange"></CameraPreview>

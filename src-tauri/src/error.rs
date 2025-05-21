@@ -29,11 +29,11 @@ impl HmPiError {
             HmPiError::ModbusErrorState => true,
             HmPiError::IoError(_) => true, // currently only connection requests can produce this error variant
             HmPiError::ModbusError(e) => match e {
-                tokio_modbus::Error::Protocol(_) => {false} // A response was received, but it was no good. This does not require reconnecting TCP
-                tokio_modbus::Error::Transport(_) => {true} // An error in TCP occurred. This requires reconnecting TCP. 
-                // TODO: check for IO errors, some, like `PermissionDenied`, 
-                //      or `AddrInUse` will never be fixed by reconnecting the TCP socket
-            }
+                tokio_modbus::Error::Protocol(_) => false, // A response was received, but it was no good. This does not require reconnecting TCP
+                tokio_modbus::Error::Transport(_) => true, // An error in TCP occurred. This requires reconnecting TCP.
+                                                           // TODO: check for IO errors, some, like `PermissionDenied`,
+                                                           //      or `AddrInUse` will never be fixed by reconnecting the TCP socket
+            },
             _ => false,
         }
     }
