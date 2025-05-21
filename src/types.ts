@@ -53,3 +53,14 @@ export enum KeypadFunctionButton{
     enter,
     blank,
 }
+
+
+export enum JobStateLookup {
+    Prepare = 0,
+    JogToStart = 1,
+    HeadDown = 2,
+    PlanishToEnd = 3,
+    PlanishToStart = 4,
+    HeadUp = 5,
+    JogToPark = 6,
+}

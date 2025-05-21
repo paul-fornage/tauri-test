@@ -84,6 +84,14 @@ const colorClass = computed<string>(() => {
   }
 })
 
+function toggleDualPass() {
+  if(Register.is_dual_pass_mode.value.value) {
+    Register.is_dual_pass_mode.value.write_value(false);
+  } else {
+    Register.is_dual_pass_mode.value.write_value(true);
+  }
+}
+
 </script>
 
 <template>
@@ -114,19 +122,29 @@ const colorClass = computed<string>(() => {
         <Play class="size-6"/>
         {{ status.job_status == JobStatus.Paused ? 'Resume' : 'Start' }}
       </Button>
+      <ActuatorButton
+          actuatorName="Dual-pass mode"
+          @clicked="toggleDualPass"
+          :actuatorSensed="Register.is_dual_pass_mode.value.value"
+          :actuatorCommanded="Register.is_dual_pass_mode.value.value"
+          true_text="On"
+          false_text="Off"
+          rising_text=""
+          falling_text=""
+      />
       <div :class="cn('text-center text-lg font-bold m-auto border-2 px-8 py-2 rounded-lg flex gap-4', colorClass)">
         <Check class="m-auto size-6" v-if="status.job_status == JobStatus.Ready"/>
         <TriangleAlert class="m-2" v-if="status.job_status == JobStatus.NotReady"/>
         <Pause class="m-2" v-if="status.job_status == JobStatus.Paused"/>
         <Play class="m-2" v-if="status.job_status == JobStatus.Running"/>
-        <p class="">
+        <p class="my-auto">
           {{ status.text }}
         </p>
       </div>
     </div>
   </LightCard>
   <LightCard class="flex-row mx-2">
-    <div class="flex flex-col flex-1/3 mx-2">
+    <div class="flex flex-col flex-1/4 mx-2">
       <BooleanStatus
           class="mb-2"
           :state="Register.is_mandrel_latch_closed.value.value"
@@ -156,7 +174,7 @@ const colorClass = computed<string>(() => {
           :actuatorCommanded="Register.cc_commanded_roller.value.value"
       />
       <div class="flex-col gap-2">
-        <div class="border-2 border-slate-600 rounded-lg flex-col flex flex-1 my-1">
+        <div class="border-2 border-slate-600 rounded-lg flex-col flex flex-1 my-1 p-1">
           <div class="flex-row flex text-lg">
             <p class="flex-1 mr-auto ml-1">
               Jog speed:
@@ -180,7 +198,7 @@ const colorClass = computed<string>(() => {
               @submit="Register.jog_speed.value.write_value"
           />
         </div>
-        <div class="border-2 border-slate-600 rounded-lg flex-col flex flex-1 my-1">
+        <div class="border-2 border-slate-600 rounded-lg flex-col flex flex-1 my-1 p-1">
           <div class="flex-row flex text-lg">
             <p class="flex-max mr-auto ml-1">
               Planish speed:
@@ -193,7 +211,6 @@ const colorClass = computed<string>(() => {
                 in/min
               </p>
             </div>
-
           </div>
           <SpeedSelect
               class="mx-1 h-12 text-lg mb-1"
