@@ -25,7 +25,9 @@ async function homeClicked() {
 }
 
 // TODO: half speed jog? maybe?
-
+// TODO: direct step jog
+// TODO: slider position feedback
+// TODO: feedback messages should be a popover and a lib
 
 function toggleFingers() {
   if(Register.cc_commanded_fingers.value.value){
@@ -84,7 +86,7 @@ function manualJogAbsoluteSubmitHandler(position: number) {
             :initial_value="Register.jog_speed.value.value"
             :min="1"
             :max="96"
-            @submit="Register.jog_speed.value.write_value"
+            @submit="(val: number) => Register.jog_speed.value.write_value(val)"
         />
       </LightCard>
       <LightCard class="border-2 border-slate-600 my-1">
@@ -104,7 +106,7 @@ function manualJogAbsoluteSubmitHandler(position: number) {
             :initial_value="Register.planish_speed.value.value"
             :min="1"
             :max="48"
-            @submit="Register.planish_speed.value.write_value"
+            @submit="(val: number) => Register.planish_speed.value.write_value(val)"
         />
       </LightCard>
 

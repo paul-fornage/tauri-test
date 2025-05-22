@@ -21,6 +21,12 @@ pub const DEFAULT_SOCKET_ADDR: SocketAddr =
 pub const STATE_MUTEX_TIMOUT: Duration = Duration::new(0, 100_000_000); // 100ms
 pub const MB_NET_OPS_TIMEOUT: Duration = Duration::new(0, 1_000_000_000); // 1s
 
+
+// TODO: make sure that the connection is at least requested to disconnect before dropping,
+//      Seems like causing a timeout by adding load to the mb server will cause the internal
+//      connection to be marked as Error variant, which drops the handle without disconnecting.
+//      Basically remember that even in an error state the TCP con might be good
+
 #[tauri::command]
 fn get_ip_addr() -> Result<String, String> {
     match local_ip_address::local_ip() {

@@ -2,7 +2,7 @@
 import {Mode, JobStatusMessage, JobStatus} from '../types.ts'
 import ModeToolbar from "./ModeToolbar.vue";
 import LightCard from "@/components/LightCard.vue";
-import {computed} from "vue";
+import {computed, ref} from "vue";
 import * as Register from "@/RegisterDefinitions.ts";
 import {Button} from "@/components/ui/button";
 import ActuatorButton from "@/components/ActuatorButton.vue";
@@ -11,6 +11,9 @@ import {info} from "@tauri-apps/plugin-log";
 import { Play, Pause, X, TriangleAlert, Check, OctagonX } from 'lucide-vue-next';
 import {cn} from "@/lib/utils.ts";
 import SpeedSelect from "@/components/SpeedSelect.vue";
+import {Progress} from "@/components/ui/progress";
+import {ActiveJob, getPhaseInfos, getTotalProgress} from "@/active_job.ts";
+import JobPhaseList from "@/components/JobPhaseList.vue";
 
 
 const emit = defineEmits<{
@@ -21,6 +24,7 @@ async function homeClicked() {
   emit("modeChange", Mode.Home)
 }
 
+// TODO: scroll op list automatically
 
 const status = computed<JobStatusMessage>(() => {
   if(Register.is_job_paused.value.value) {
@@ -92,6 +96,27 @@ function toggleDualPass() {
   }
 }
 
+const loadedJob = computed<ActiveJob>(()=>{
+  return {
+    pre_start_position: Register.is_job_active.value.value
+        ? Register.job_pre_start_pos.value.value
+        : Register.cc_commanded_position.value.value,
+    start_position: Register.job_start_pos.value.value,
+    end_position: Register.job_end_pos.value.value,
+    park_position: Register.job_park_pos.value.value,
+    is_dual_pass: Register.is_dual_pass_mode.value.value,
+    current_phase: Register.job_progress.value.value,
+    current_position: Register.cc_commanded_position.value.value,
+  }
+})
+
+const totalProgress = computed<number>(()=>{
+  if(!Register.is_job_active.value.value) {
+    return 0;
+  }
+  return getTotalProgress(loadedJob.value);
+})
+
 </script>
 
 <template>
@@ -104,25 +129,26 @@ function toggleDualPass() {
       <Button
           @click="Register.is_cancel_cycle_button_latched.value.write_value(true)"
           :disabled="!Register.is_job_active.value.value"
-          class="border-4 flex-1 h-16 text-2xl border-red-700">
+          class="border-4 flex-1/5 h-16 text-2xl border-red-700">
         <OctagonX class="size-6"/>
         Cancel
       </Button>
       <Button
           @click="Register.is_pause_cycle_button_latched.value.write_value(true)"
           :disabled="!Register.is_job_active.value.value"
-          class="border-4 flex-1 h-16 text-2xl border-slate-600">
+          class="border-4 flex-1/5 h-16 text-2xl border-slate-600">
         <Pause class="size-6"/>
         {{ status.job_status == JobStatus.Paused ? 'Paused' : 'Pause' }}
       </Button>
       <Button
           @click="Register.is_start_cycle_button_latched.value.write_value(true)"
           :disabled="!(status.job_status == JobStatus.Paused || status.job_status == JobStatus.Ready)"
-          class="border-4 flex-1 h-16 text-2xl border-green-600">
+          class="border-4 flex-1/5 h-16 text-2xl border-green-600">
         <Play class="size-6"/>
         {{ status.job_status == JobStatus.Paused ? 'Resume' : 'Start' }}
       </Button>
       <ActuatorButton
+          class="flex-1/5 h-16 my-0"
           actuatorName="Dual-pass mode"
           @clicked="toggleDualPass"
           :actuatorSensed="Register.is_dual_pass_mode.value.value"
@@ -132,12 +158,12 @@ function toggleDualPass() {
           rising_text=""
           falling_text=""
       />
-      <div :class="cn('text-center text-lg font-bold m-auto border-2 px-8 py-2 rounded-lg flex gap-4', colorClass)">
+      <div :class="cn('h-16 text-center text-lg font-bold m-auto border-2 py-2 px-2 rounded-lg flex flex-1/5', colorClass)">
         <Check class="m-auto size-6" v-if="status.job_status == JobStatus.Ready"/>
-        <TriangleAlert class="m-2" v-if="status.job_status == JobStatus.NotReady"/>
-        <Pause class="m-2" v-if="status.job_status == JobStatus.Paused"/>
-        <Play class="m-2" v-if="status.job_status == JobStatus.Running"/>
-        <p class="my-auto">
+        <TriangleAlert class="m-auto size-6" v-if="status.job_status == JobStatus.NotReady"/>
+        <Pause class="m-auto size-6" v-if="status.job_status == JobStatus.Paused"/>
+        <Play class="m-auto size-6" v-if="status.job_status == JobStatus.Running"/>
+        <p class="my-auto mr-auto text-nowrap">
           {{ status.text }}
         </p>
       </div>
@@ -195,7 +221,7 @@ function toggleDualPass() {
               :initial_value="Register.jog_speed.value.value"
               :min="1"
               :max="96"
-              @submit="Register.jog_speed.value.write_value"
+              @submit="(val: number) => Register.jog_speed.value.write_value(val)"
           />
         </div>
         <div class="border-2 border-slate-600 rounded-lg flex-col flex flex-1 my-1 p-1">
@@ -218,13 +244,25 @@ function toggleDualPass() {
               :initial_value="Register.planish_speed.value.value"
               :min="1"
               :max="48"
-              @submit="Register.planish_speed.value.write_value"
+              @submit="(val: number) => Register.planish_speed.value.write_value(val)"
           />
         </div>
       </div>
     </div>
-    <div class="flex flex-col flex-2/3 mx-2">
+    <div class="flex flex-col flex-2/3 mx-4">
+      <div class="flex">
+        <h3 class="ml-auto mr-2 text-lg">
+          Progress:
+        </h3>
+        <h3 class="mr-auto ml-2 text-xl font-bold">
+          {{(totalProgress*100).toFixed(1) + '%'}}
+        </h3>
+      </div>
 
+      <Progress
+          :max="100"
+          :model-value="totalProgress*100" />
+      <JobPhaseList :job-phases="getPhaseInfos(loadedJob)" />
     </div>
   </LightCard>
 

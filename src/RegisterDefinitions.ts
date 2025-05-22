@@ -127,6 +127,7 @@ export const hmi_job_start_pos       = ref(new HregRegister(17, 0, hundreths_to_
 export const hmi_job_end_pos         = ref(new HregRegister(18, 0, hundreths_to_inches, inches_to_hundreths));
 export const hmi_job_park_pos        = ref(new HregRegister(19, 0, hundreths_to_inches, inches_to_hundreths));
 export const cc_iteration_time       = ref(new HregRegister(20, 0));
+export const job_pre_start_pos       = ref(new HregRegister(21, 0, hundreths_to_inches, inches_to_hundreths));
 
 export class HregRegisterRange {
     addr_start: number;
@@ -249,7 +250,7 @@ export async function read_hregs(): Promise<void> {
         hmi_job_end_pos.value.read_value(hregArray);
         hmi_job_park_pos.value.read_value(hregArray);
         cc_iteration_time.value.read_value(hregArray);
-
+        job_pre_start_pos.value.read_value(hregArray);
 
         for (let i = 0; i < message_register_range.value.length; i++) {
             message_register_range.value.values[i] = hregArray[message_register_range.value.addr_start + i] || 0;

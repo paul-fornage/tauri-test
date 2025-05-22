@@ -26,6 +26,12 @@ export enum PositionType {
     Park = "park"
 }
 
+export enum PhaseWorkingStatus {
+    NotStarted = 'NotStarted',
+    Working = 'Working',
+    Done = 'Done',
+}
+
 export enum JogDirection {
     POSITIVE = "pos",
     NEGATIVE = "neg",
@@ -55,12 +61,13 @@ export enum KeypadFunctionButton{
 }
 
 
+
 export enum JobStateLookup {
-    Prepare = 0,
-    JogToStart = 1,
-    HeadDown = 2,
-    PlanishToEnd = 3,
-    PlanishToStart = 4,
-    HeadUp = 5,
-    JogToPark = 6,
+    Prepare,
+    JogToStart,
+    HeadDown,
+    PlanishToEnd,
+    PlanishToStart,
+    HeadUp,
+    JogToPark,
 }

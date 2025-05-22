@@ -2,8 +2,9 @@
 import {
   debug,
 } from '@tauri-apps/plugin-log';
-import {computed, ComputedRef} from "vue";
+import {computed, ComputedRef, type HTMLAttributes} from "vue";
 import {Button} from "@/components/ui/button";
+import {cn} from "@/lib/utils.ts";
 
 const props = defineProps<{
   actuatorName: string,
@@ -13,6 +14,7 @@ const props = defineProps<{
   false_text?: string,
   rising_text?: string,
   falling_text?: string,
+  class?: HTMLAttributes['class'],
 }>();
 
 const emit = defineEmits<{
@@ -23,7 +25,7 @@ async function clickHandler() {
   emit("clicked")
 }
 
-function getActuatorButtonClass(): string {
+const ActuatorButtonClass = computed<string>(() => {
   if (props.actuatorSensed && props.actuatorCommanded) {
     return "border-green-600 text-green-600 dark:text-green-800";
   }
@@ -31,7 +33,7 @@ function getActuatorButtonClass(): string {
     return "border-red-500 text-red-600 dark:text-red-800";
   }
   return "border-gay-600 text-gray-400";
-}
+});
 
 const subtext: ComputedRef<string> = computed(() => {
   if (props.actuatorSensed && props.actuatorCommanded) {
@@ -51,8 +53,8 @@ const subtext: ComputedRef<string> = computed(() => {
 
 <template>
   <Button @click="clickHandler"
-       :class="['my-1 py-6 px-8 border-4 rounded-lg flex gap-5 text-xl',
-                getActuatorButtonClass()]">
+       :class="cn('my-1 py-6 px-auto border-4 rounded-lg flex gap-5 text-xl',
+                ActuatorButtonClass, props.class)">
     <p class="text-left mr-auto">
       {{ actuatorName }}
     </p>
