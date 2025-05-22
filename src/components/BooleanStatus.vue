@@ -26,7 +26,7 @@ const text = computed(() => {
 
 <template>
   <LightCard :class="['border-2', stateClass]">
-    <p class="text-center text-xl">
+    <p class="text-center text-xl my-auto">
       {{text}}
     </p>
 

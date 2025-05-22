@@ -12,8 +12,11 @@ import * as Register from './RegisterDefinitions.ts';
 import LearnMode from "@/components/LearnMode.vue";
 
 
-// TODO: https://github.com/tauri-apps/plugins-workspace/tree/v2/plugins/autostart
 // TODO: https://v2.tauri.app/plugin/updater/
+// TODO: Optimize for different viewports
+// TODO: Organize file structure
+// TODO: ESTOP FEEDBACK
+// TODO: Icons everywhere
 
 const connectedSocket = ref<string>("Socket Address");
 const local_ip_addr = ref<string>("Ip Address");

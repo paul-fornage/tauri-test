@@ -16,22 +16,18 @@ const props = withDefaults(defineProps<Props>(), {
   as: 'button',
 })
 
-const disabledClass = computed<string>(() => {
-  if (props.disabled) {
-    return "border-slate-200 hover:cursor-not-allowed text-slate-400 bg-slate-300"
-  } else {
-    return ""
-  }
-})
 
 </script>
 
 <template>
   <Primitive
     data-slot="button"
+    :disabled="props.disabled"
     :as="as"
     :as-child="asChild"
-    :class="cn(buttonVariants({ variant, size }), props.class, disabledClass, 'active:scale-95')"
+    :class="cn(buttonVariants({ variant, size }),
+       'active:scale-95 disabled:border-slate-200 disabled:hover:cursor-not-allowed ' +
+       'disabled:text-slate-400 disabled:bg-slate-300', props.class)"
   >
     <slot />
   </Primitive>

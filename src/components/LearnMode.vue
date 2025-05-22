@@ -14,6 +14,7 @@ import { readTextFile, writeTextFile, BaseDirectory } from '@tauri-apps/plugin-f
 import {MAX_AXIS_POS, MIN_AXIS_POS} from "@/constants.ts";
 import PositionSelect from "@/components/PositionSelect.vue";
 import JogButton from "@/components/JogButton.vue";
+import CurrentPositionDisplay from "@/components/CurrentPositionDisplay.vue";
 
 
 
@@ -159,27 +160,27 @@ async function loadJobFromDiskHandler() {
       header-text="Edit job"
       @homeClicked="homeClicked"
   />
-  <LightCard class="m-2 p-2"> <!-- Saved job display -->
+  <LightCard class="m-2 p-2 border-2"> <!-- Saved job display -->
     <h1 class="text-center text-2xl">
       Current saved job
     </h1>
     <div class="flex gap-4">
       <PositionDisplay
-          class="border-2 border-slate-400 rounded-xl flex-1"
+          class="border-2 border-slate-300 rounded-lg flex-1"
           :position-to-display="Register.job_start_pos.value.value" >
         <p class="mr-4">
           Start position
         </p>
       </PositionDisplay>
       <PositionDisplay
-          class="border-2 border-slate-400 rounded-xl flex-1"
+          class="border-2 border-slate-300 rounded-lg flex-1"
           :position-to-display="Register.job_end_pos.value.value" >
         <p class="mr-4">
           End position
         </p>
       </PositionDisplay>
       <PositionDisplay
-          class="border-2 border-slate-400 rounded-xl flex-1"
+          class="border-2 border-slate-300 rounded-lg flex-1"
           :position-to-display="Register.job_park_pos.value.value" >
         <p class="mr-4">
           Park position
@@ -188,18 +189,19 @@ async function loadJobFromDiskHandler() {
     </div>
   </LightCard> <!-- /Saved job display -->
   <LightCard
-      class="m-2">
+      class="m-2 gap-2 py-2 border-2">
     <div class="flex h-12">
-      <h1 class="text-center flex-1 text-2xl my-auto">
-        Modified job
-      </h1>
       <div
           class="flex-1"
           v-if="isUnsavedChanges">
-        <h3 class="text-center text-xl m-auto border-4 rounded-lg border-orange-500 w-min text-nowrap p-1">
+        <h3 class="text-center text-xl m-auto border-4 rounded-lg border-orange-500 bg-orange-300 w-min text-nowrap p-1">
           Unsaved changes
         </h3>
       </div>
+      <h1 v-else
+          class="text-center text-2xl my-auto flex-1">
+        Modified job
+      </h1>
     </div>
 
 
@@ -247,26 +249,20 @@ async function loadJobFromDiskHandler() {
       </Button>
     </div>
   </LightCard>
-  <LightCard class="w-full flex-row mt-2">
+  <LightCard class="flex-row mt-2 mx-2 px-2 gap-3">
     <JogButton
-        class="mx-auto h-16 w-64 text-2xl"
+        :disabled="!Register.is_homed.value.value"
+        class="mx-auto h-16 w-64 text-2xl flex-1/4"
         :direction="JogDirection.NEGATIVE" />
-    <div class="border-slate-800 border-2 rounded-lg">
-      <PositionDisplay
-          v-if="Register.is_homed.value.value"
-          :position-to-display="Register.cc_commanded_position.value.value" >
-        <p>
-          Current position
-        </p>
-      </PositionDisplay>
-      <div v-else>
-        <h1 class="text-slate-400 text-xl text-center">
-          Home axis to see position
-        </h1>
-      </div>
+    <div class="border-2 rounded-lg flex-1/4">
+      <CurrentPositionDisplay
+          :homed="Register.is_homed.value.value"
+          :position-to-display="Register.cc_commanded_position.value.value" />
     </div>
 
     <PositionSelect
+        :disabled="!Register.is_homed.value.value"
+        class="flex-1/4"
         @submitNewPosition="manualJogAbsoluteSubmitHandler"
         :current-position="Register.cc_commanded_position.value.value"
         :min-commanded-position="MIN_AXIS_POS"
@@ -275,7 +271,8 @@ async function loadJobFromDiskHandler() {
       Jog to absolute position
     </PositionSelect>
     <JogButton
-        class="mx-auto h-16 w-64 text-2xl"
+        :disabled="!Register.is_homed.value.value"
+        class="mx-auto h-16 w-64 text-2xl flex-1/4"
         :direction="JogDirection.POSITIVE" />
   </LightCard>
 

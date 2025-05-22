@@ -14,6 +14,7 @@ import SpeedSelect from "@/components/SpeedSelect.vue";
 import {Progress} from "@/components/ui/progress";
 import {ActiveJob, getPhaseInfos, getTotalProgress} from "@/active_job.ts";
 import JobPhaseList from "@/components/JobPhaseList.vue";
+import SpeedManage from "@/components/SpeedManage.vue";
 
 
 const emit = defineEmits<{
@@ -24,7 +25,7 @@ async function homeClicked() {
   emit("modeChange", Mode.Home)
 }
 
-// TODO: scroll op list automatically
+
 
 const status = computed<JobStatusMessage>(() => {
   if(Register.is_job_paused.value.value) {
@@ -170,14 +171,15 @@ const totalProgress = computed<number>(()=>{
     </div>
   </LightCard>
   <LightCard class="flex-row mx-2">
-    <div class="flex flex-col flex-1/4 mx-2">
+    <div class="flex flex-col flex-1/4 mb-2 gap-1">
       <BooleanStatus
-          class="mb-2"
+          class=""
           :state="Register.is_mandrel_latch_closed.value.value"
           true_text="Mandrel latch closed and secured"
           false_text="Mandrel latch not secured"
       />
       <ActuatorButton
+          class="flex-1/6"
           actuatorName="Carriage axis"
           @clicked="homeAxisHandler()"
           :actuatorSensed="Register.is_homed.value.value"
@@ -188,66 +190,29 @@ const totalProgress = computed<number>(()=>{
           falling_text="Something has gone wrong"
       />
       <ActuatorButton
+          class="flex-1/6"
           actuatorName="Fingers"
           @clicked="toggleFingers()"
           :actuatorSensed="Register.is_fingers_down.value.value"
           :actuatorCommanded="Register.cc_commanded_fingers.value.value"
       />
       <ActuatorButton
+          class="flex-1/6"
           actuatorName="Roller"
           @clicked="toggleRoller()"
           :actuatorSensed="Register.is_roller_down.value.value"
           :actuatorCommanded="Register.cc_commanded_roller.value.value"
       />
-      <div class="flex-col gap-2">
-        <div class="border-2 border-slate-600 rounded-lg flex-col flex flex-1 my-1 p-1">
-          <div class="flex-row flex text-lg">
-            <p class="flex-1 mr-auto ml-1">
-              Jog speed:
-            </p>
-            <div class="ml-auto mr-1 flex">
-              <p class="text-slate-800 dark:text-slate-200 text-2xl font-bold text-right">
-                {{Register.jog_speed.value.value.toFixed(2)}}
-              </p>
-              <p class="text-sm text-right m-1 mt-auto">
-                in/min
-              </p>
-            </div>
-
-          </div>
-          <SpeedSelect
-              class="mx-1 h-12 text-lg mb-1"
-              text="Edit Jog speed"
-              :initial_value="Register.jog_speed.value.value"
-              :min="1"
-              :max="96"
-              @submit="(val: number) => Register.jog_speed.value.write_value(val)"
-          />
-        </div>
-        <div class="border-2 border-slate-600 rounded-lg flex-col flex flex-1 my-1 p-1">
-          <div class="flex-row flex text-lg">
-            <p class="flex-max mr-auto ml-1">
-              Planish speed:
-            </p>
-            <div class="ml-auto mr-1 flex">
-              <p class="text-slate-800 dark:text-slate-200 text-2xl font-bold text-right">
-                {{Register.planish_speed.value.value.toFixed(2)}}
-              </p>
-              <p class="text-sm text-right m-1 mt-auto">
-                in/min
-              </p>
-            </div>
-          </div>
-          <SpeedSelect
-              class="mx-1 h-12 text-lg mb-1"
-              text="Edit Planish speed"
-              :initial_value="Register.planish_speed.value.value"
-              :min="1"
-              :max="48"
-              @submit="(val: number) => Register.planish_speed.value.write_value(val)"
-          />
-        </div>
-      </div>
+      <SpeedManage
+          class="flex-1/6"
+          @submit-speed="(val: number) => Register.jog_speed.value.write_value(val)"
+          :current-speed="Register.jog_speed.value.value"
+          type="jog" />
+      <SpeedManage
+          class="flex-1/6"
+          @submit-speed="(val: number) => Register.planish_speed.value.write_value(val)"
+          :current-speed="Register.planish_speed.value.value"
+          type="planish" />
     </div>
     <div class="flex flex-col flex-2/3 mx-4">
       <div class="flex">

@@ -53,16 +53,14 @@ const subtext: ComputedRef<string> = computed(() => {
 
 <template>
   <Button @click="clickHandler"
-       :class="cn('my-1 py-6 px-auto border-4 rounded-lg flex gap-5 text-xl',
+       :class="cn('py-3 px-auto border-4 rounded-lg flex gap-5 text-xl',
                 ActuatorButtonClass, props.class)">
     <p class="text-left mr-auto">
       {{ actuatorName }}
     </p>
-    <div>
-      <p>
-        {{ subtext }}
-      </p>
-    </div>
+    <p>
+      {{ subtext }}
+    </p>
   </Button>
 </template>
 

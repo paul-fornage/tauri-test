@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import {Button} from "@/components/ui/button";
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import {ref, onMounted, onBeforeUnmount, computed} from 'vue';
 import { Minus, Plus } from 'lucide-vue-next';
 import {JogDirection} from "@/types.ts";
 import {info,error} from "@tauri-apps/plugin-log";
 import * as Register from '../RegisterDefinitions.ts';
+import {cn} from "@/lib/utils.ts";
 
 const props = defineProps<{
   direction: JogDirection;
+  disabled?: boolean,
 }>();
 
 
@@ -16,7 +18,11 @@ const props = defineProps<{
 
 // Start the action
 function startAction() {
-
+  if(props.disabled) {
+    Register.is_jog_pos_pressed.value.write_value(false);
+    Register.is_jog_neg_pressed.value.write_value(false);
+    return;
+  }
   if(props.direction === JogDirection.NEGATIVE) {
     info("Negative Jog button pressed");
     Register.is_jog_neg_pressed.value.write_value(true);
@@ -50,10 +56,12 @@ onBeforeUnmount(() => {
   stopAction();
 });
 
+
 </script>
 
 <template>
   <Button
+      :disabled="props.disabled"
       class="flex select-none"
       @mousedown="startAction"
       @touchstart="startAction"

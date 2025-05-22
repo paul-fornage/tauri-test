@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { ref, watch, computed } from "vue";
+import {ref, watch, computed, type HTMLAttributes} from "vue";
 import { constrain } from "@/utils.ts";
 import {Button} from "@/components/ui/button";
 import ChevronButton from "@/components/ChevronButton.vue";
 import AxisSlider from "@/components/AxisSlider.vue";
-import {Slider} from "@/components/ui/slider";
 import {
   Card,
   CardContent,
@@ -12,7 +11,8 @@ import {
 } from '@/components/ui/card';
 import {Dialog, DialogClose, DialogContent, DialogFooter, DialogTrigger} from "@/components/ui/dialog";
 import {warn} from "@tauri-apps/plugin-log";
-
+import LightCard from "@/components/LightCard.vue";
+import {cn} from "@/lib/utils.ts";
 
 const props = defineProps<{
   currentPosition: number;
@@ -20,11 +20,21 @@ const props = defineProps<{
   maxCommandedPosition: number;
   isHomed: boolean; // should reset to current pos be offered?
   initialPosition?: number;
+  disabled?: boolean;
+  class?: HTMLAttributes['class']
 }>();
 
 const emits = defineEmits<{
   (e: 'submitNewPosition', new_val: number): void;
 }>();
+
+const disabledClass = computed<string>(() => {
+  if (props.disabled) {
+    return "bg-slate-400 text-slate-200 stroke-slate-200"
+  }
+  return ""
+})
+
 
 // Always keep a reactive local copy of the modelValue prop
 const local_val = ref<number>(props.initialPosition ?? props.currentPosition);
@@ -65,8 +75,12 @@ async function addToCommandedPosition(delta: number){
   <Dialog
       v-model:open="isDialogOpen"
       class="flex-1">
+<!--    TODO: remove built in dialog close button    -->
     <DialogTrigger as-child>
-      <Button class="mx-auto text-2xl h-16" variant="default">
+      <Button
+          :disabled="props.disabled"
+          :class="cn('mx-auto text-2xl h-16', disabledClass, props.class)"
+          variant="default">
         <slot>
         </slot>
       </Button>
@@ -100,18 +114,16 @@ async function addToCommandedPosition(delta: number){
           </CardContent>
         </Card>
 
-        <Card class="mt-2">
-          <CardContent class="flex gap-4">
-            <ChevronButton @click="addToCommandedPosition(-1)" variant="l3" />
-            <ChevronButton @click="addToCommandedPosition(-0.1)" variant="l2" />
-            <ChevronButton @click="addToCommandedPosition(-0.01)" variant="l1" />
-            <ChevronButton @click="addToCommandedPosition(0.01)" variant="r1" />
-            <ChevronButton @click="addToCommandedPosition(0.1)" variant="r2" />
-            <ChevronButton @click="addToCommandedPosition(1)" variant="r3" />
-          </CardContent>
-        </Card>
+        <LightCard class="mt-2 flex gap-3 flex-row px-3">
+          <ChevronButton @click="addToCommandedPosition(-1)" variant="l3" />
+          <ChevronButton @click="addToCommandedPosition(-0.1)" variant="l2" />
+          <ChevronButton @click="addToCommandedPosition(-0.01)" variant="l1" />
+          <ChevronButton @click="addToCommandedPosition(0.01)" variant="r1" />
+          <ChevronButton @click="addToCommandedPosition(0.1)" variant="r2" />
+          <ChevronButton @click="addToCommandedPosition(1)" variant="r3" />
+        </LightCard>
       </div>
-      <DialogFooter class="">
+      <DialogFooter class="gap-3">
         <DialogClose as-child class="flex-1 h-20 text-3xl">
           <Button type="button" class="bg-red-900 active:bg-red-700 dark:bg-red-500">
             Cancel

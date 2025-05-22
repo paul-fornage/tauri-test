@@ -4,7 +4,7 @@ import {JogDirection, Mode} from '../types.ts'
 import ModeToolbar from "./ModeToolbar.vue";
 import {Button} from "@/components/ui/button";
 import ActuatorButton from "./ActuatorButton.vue";
-import {info} from "@tauri-apps/plugin-log";
+import {info, warn} from "@tauri-apps/plugin-log";
 import * as Register from '../RegisterDefinitions.ts';
 import PositionSelect from "@/components/PositionSelect.vue";
 import {Dialog, DialogClose, DialogContent, DialogFooter, DialogTrigger,} from '@/components/ui/dialog'
@@ -14,6 +14,11 @@ import LightCard from "@/components/LightCard.vue";
 import JogButton from "@/components/JogButton.vue";
 import PositionDisplay from "@/components/PositionDisplay.vue";
 import {MAX_AXIS_POS, MIN_AXIS_POS} from "@/constants.ts"
+import ChevronButton from "@/components/ChevronButton.vue";
+import SpeedManage from "@/components/SpeedManage.vue";
+import CurrentPositionDisplay from "@/components/CurrentPositionDisplay.vue";
+import AxisSlider from "@/components/AxisSlider.vue";
+import AxisSliderDisplay from "@/components/AxisSliderDisplay.vue";
 
 const emit = defineEmits<{
   (e: 'modeChange', mode: Mode): void
@@ -49,7 +54,19 @@ function toggleRoller() {
   }
 }
 
-
+function manualStepJog(amount: number) {
+  info("manual step jog button handler: " + amount.toString());
+  let newPosition: number = Register.cc_commanded_position.value.value + amount;
+  if(newPosition < MIN_AXIS_POS) {
+    newPosition = MIN_AXIS_POS;
+    warn("Manual step jog: position below min")
+  } else if (newPosition > MAX_AXIS_POS) {
+    newPosition = MAX_AXIS_POS;
+    warn("Manual step jog: position above max")
+  }
+  Register.hmi_commanded_position.value.write_value(newPosition);
+  Register.is_commanded_pos_latched.value.write_value(true);
+}
 
 function manualJogAbsoluteSubmitHandler(position: number) {
   info("manual jog absolute button handler: " + position.toString());
@@ -65,77 +82,37 @@ function manualJogAbsoluteSubmitHandler(position: number) {
       @homeClicked="homeClicked"
   />
 
-  <div class="flex border-b-2 p-4 select-none">
-    <div class="flex flex-col flex-1/4 mx-2">
+  <LightCard class="flex p-4 select-none flex-row m-2">
+    <div class="flex flex-col flex-1/4 mx-2 gap-2">
 
-      <LightCard class="border-2 border-slate-600 mb-1">
-        <div class="flex-rox flex text-xl">
-          <p class="flex-max mr-auto ml-4">
-            Current jog speed:
-          </p>
-          <p class="ml-auto mr-2 flex-1 text-right text-slate-800 dark:text-slate-200 text-2xl font-bold">
-            {{Register.jog_speed.value.value.toFixed(2)}}
-          </p>
-          <p class="mr-4 text-right">
-            in/min
-          </p>
-        </div>
-
-        <SpeedSelect
-            text="Set new jog speed"
-            :initial_value="Register.jog_speed.value.value"
-            :min="1"
-            :max="96"
-            @submit="(val: number) => Register.jog_speed.value.write_value(val)"
-        />
-      </LightCard>
-      <LightCard class="border-2 border-slate-600 my-1">
-        <div class="flex-rox flex text-xl">
-          <p class="flex-max mr-auto ml-4 ">
-            Current planish speed:
-          </p>
-          <p class="ml-auto mr-2 flex-1 text-right text-slate-800 dark:text-slate-200 text-2xl font-bold">
-            {{Register.planish_speed.value.value.toFixed(2)}}
-          </p>
-          <p class="mr-4 text-right">
-            in/min
-          </p>
-        </div>
-        <SpeedSelect
-            text="Set new planish speed"
-            :initial_value="Register.planish_speed.value.value"
-            :min="1"
-            :max="48"
-            @submit="(val: number) => Register.planish_speed.value.write_value(val)"
-        />
-      </LightCard>
+      <SpeedManage
+          @submit-speed="(val: number) => Register.jog_speed.value.write_value(val)"
+          :current-speed="Register.jog_speed.value.value"
+          type="jog" />
+      <SpeedManage
+          @submit-speed="(val: number) => Register.planish_speed.value.write_value(val)"
+          :current-speed="Register.planish_speed.value.value"
+          type="planish" />
 
     </div>
 
     <div class="flex flex-col flex-1/4 mx-2 gap-2">
-      <LightCard class="border-2 border-slate-600">
-        <PositionDisplay
-            v-if="Register.is_homed.value.value"
-            :position-to-display="Register.cc_commanded_position.value.value" >
-          <p>
-            Current position
-          </p>
-        </PositionDisplay>
-        <div v-else>
-          <h1 class="text-slate-400 text-xl text-center">
-            Home axis to see position
-          </h1>
-        </div>
-      </LightCard>
-    </div>
-    <div class="flex flex-col flex-1/4 mx-2">
       <BooleanStatus
-          class="mb-2"
+          class=""
           :state="Register.is_mandrel_latch_closed.value.value"
           true_text="Mandrel latch closed and secured"
           false_text="Mandrel latch not secured"
       />
+      <LightCard class="border-2 border-slate-600 flex-1 py-0">
+        <CurrentPositionDisplay
+            :homed="Register.is_homed.value.value"
+            :position-to-display="Register.cc_commanded_position.value.value" />
+
+      </LightCard>
+    </div>
+    <div class="flex flex-col flex-1/4 mx-2 gap-2">
       <ActuatorButton
+          class="flex-1/4"
           actuatorName="Carriage axis"
           @clicked="Register.is_axis_homing_button_latched.value.write_value(true)"
           :actuatorSensed="Register.is_homed.value.value"
@@ -146,35 +123,76 @@ function manualJogAbsoluteSubmitHandler(position: number) {
           falling_text="Something has gone wrong"
       />
       <ActuatorButton
+          class="flex-1/4"
           actuatorName="Fingers"
           @clicked="toggleFingers()"
           :actuatorSensed="Register.is_fingers_down.value.value"
           :actuatorCommanded="Register.cc_commanded_fingers.value.value"
       />
       <ActuatorButton
+          class="flex-1/4"
           actuatorName="Roller"
           @clicked="toggleRoller()"
           :actuatorSensed="Register.is_roller_down.value.value"
           :actuatorCommanded="Register.cc_commanded_roller.value.value"
       />
     </div>
-  </div>
-  <div class="w-full flex mt-4">
-    <JogButton
-        class="mx-auto h-16 w-64 text-2xl"
-        :direction="JogDirection.NEGATIVE" />
-    <PositionSelect
-        @submitNewPosition="manualJogAbsoluteSubmitHandler"
-        :current-position="Register.cc_commanded_position.value.value"
-        :min-commanded-position="MIN_AXIS_POS"
-        :is-homed="Register.is_homed.value.value"
-        :max-commanded-position="MAX_AXIS_POS" >
-      Jog to absolute position
-    </PositionSelect>
-    <JogButton
-        class="mx-auto h-16 w-64 text-2xl"
-        :direction="JogDirection.POSITIVE" />
-  </div>
+  </LightCard>
+  <LightCard class="gap-1 py-2 m-2">
+    <h3 v-if="!Register.is_homed.value.value"
+        class="text-2xl text-center">
+      Home the carriage to jog
+    </h3>
+    <div class="w-full flex my-1">
+      <JogButton
+          :disabled="!Register.is_homed.value.value"
+          class="mx-auto h-16 w-64 text-2xl"
+          :direction="JogDirection.NEGATIVE" />
+      <PositionSelect
+          :disabled="!Register.is_homed.value.value"
+          @submitNewPosition="manualJogAbsoluteSubmitHandler"
+          :current-position="Register.cc_commanded_position.value.value"
+          :min-commanded-position="MIN_AXIS_POS"
+          :is-homed="Register.is_homed.value.value"
+          :max-commanded-position="MAX_AXIS_POS" >
+        Jog to absolute position
+      </PositionSelect>
+      <JogButton
+          :disabled="!Register.is_homed.value.value"
+          class="mx-auto h-16 w-64 text-2xl"
+          :direction="JogDirection.POSITIVE" />
+    </div>
+  </LightCard>
+  <LightCard class="flex m-2 gap-1 py-2 px-8">
+    <div class="flex h-10">
+      <div class="m-auto text-xl px-4">
+        {{ MIN_AXIS_POS }}
+      </div>
+<!--      TODO: add a commanded and actual pos thumb. also make the bounds line up + notches   -->
+      <AxisSliderDisplay
+          :model-value="[Register.cc_commanded_position.value.value]"
+          :min="MIN_AXIS_POS"
+          :max="MAX_AXIS_POS"
+          :disable-thumb="!Register.is_homed.value.value"
+          :disabled="true"
+          :step="0.01"
+          class="flex-1"
+      />
+      <div class="m-auto text-xl px-4">
+        {{ MAX_AXIS_POS }}
+      </div>
+    </div>
+  </LightCard>
+  <LightCard class="flex m-2 gap-1 py-2">
+    <div class="mt-1 flex gap-3 flex-row px-3">
+      <ChevronButton @click="manualStepJog(-1)" variant="l3" :disabled="!Register.is_homed.value.value" />
+      <ChevronButton @click="manualStepJog(-0.1)" variant="l2" :disabled="!Register.is_homed.value.value" />
+      <ChevronButton @click="manualStepJog(-0.01)" variant="l1" :disabled="!Register.is_homed.value.value" />
+      <ChevronButton @click="manualStepJog(0.01)" variant="r1" :disabled="!Register.is_homed.value.value" />
+      <ChevronButton @click="manualStepJog(0.1)" variant="r2" :disabled="!Register.is_homed.value.value" />
+      <ChevronButton @click="manualStepJog(1)" variant="r3" :disabled="!Register.is_homed.value.value" />
+    </div>
+  </LightCard>
 </template>
 
 <style scoped>
